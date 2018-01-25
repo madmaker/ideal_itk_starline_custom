@@ -22,10 +22,13 @@ int set_substitute_base_data(tag_t replacement_form, tag_t revision)
 
 	try
 	{
-
-		erc = GRM_find_relation_type("IMAN_Motion", &temp_relation_type);
-		erc = GRM_create_relation(replacement_form, revision, temp_relation_type, NULLTAG, &temp_relation);
-		erc = GRM_save_relation(temp_relation);
+		erc = AOM_refresh(replacement_form, TRUE);
+		erc = AOM_set_value_tag(replacement_form, "sl4_ReplacementPrimary", revision);
+		erc = AOM_save(replacement_form);
+		erc = AOM_refresh(replacement_form, FALSE);
+		//erc = GRM_find_relation_type("IMAN_Motion", &temp_relation_type);
+		//erc = GRM_create_relation(replacement_form, revision, temp_relation_type, NULLTAG, &temp_relation);
+		//erc = GRM_save_relation(temp_relation);
 	}
 	catch (int exfail)
 	{
@@ -38,7 +41,8 @@ int set_substitute_base_data(tag_t replacement_form, tag_t revision)
 int create_form(tag_t* form_r)
 {
 	int erc = ITK_ok;
-	char* form_type = "Pm8_GeneralNoteForm";
+	//char* form_type = "Pm8_GeneralNoteForm";
+	char* form_type = "SL4_ReplacementForm";
 	tag_t form;
 	tag_t form_create_input;
 
@@ -75,7 +79,8 @@ int relate(tag_t primary, tag_t secondary)
 	try
 	{
 		WRITE_LOG("%s", "creating relation... ");
-		erc = GRM_find_relation_type("IMAN_Rendering", &relation_type);
+		//erc = GRM_find_relation_type("IMAN_Rendering", &relation_type);
+		erc = GRM_find_relation_type("SL4_ReplacementRel", &relation_type);
 		erc = GRM_create_relation(primary, secondary, relation_type, NULLTAG, &relation);
 		erc = GRM_save_relation(relation);
 		WRITE_LOG("%s\n", "done");
@@ -88,7 +93,7 @@ int relate(tag_t primary, tag_t secondary)
 	return erc;
 }
 
-int get_bom_window_and_top_line_from_bvr(tag_t bvr, tag_t* bom_window, tag_t* top_line)
+int get_bom_window_and_top_line_from_bvr(tag_t bvr, logical packed, tag_t* bom_window, tag_t* top_line)
 {
 	int erc = ITK_ok;
 	tag_t bom_window_r;
@@ -97,6 +102,7 @@ int get_bom_window_and_top_line_from_bvr(tag_t bvr, tag_t* bom_window, tag_t* to
 	try
 	{
 		erc = BOM_create_window(&bom_window_r);
+		//erc = BOM_set_window_pack_all(bom_window_r, packed);
 		erc = BOM_set_window_top_line_bvr (bom_window_r, bvr, &top_line_r);
 		*bom_window = bom_window_r;
 		*top_line = top_line_r;
@@ -213,12 +219,14 @@ int post_remove_all_substitutes(METHOD_message_t *msg, va_list args)
 			tag_t top_line;
 			int child_count = 0;
 			tag_t* children;
-			erc = get_bom_window_and_top_line_from_bvr(primary_object, &bom_window, &top_line);
+			erc = get_bom_window_and_top_line_from_bvr(primary_object, false, &bom_window, &top_line);
 			erc = BOM_line_ask_all_child_lines(top_line, &child_count, &children);
 			for(int i = 0; i < child_count; i++)
 			{
 				WRITE_LOG("%s\n", "-line");
-				list_bom_substitutes(children[i], top_replacement_form);
+				logical is_substitute;
+				erc = BOM_line_ask_is_substitute(children[i], &is_substitute);
+				if(!is_substitute) list_bom_substitutes(children[i], top_replacement_form);
 				WRITE_LOG("%s\n", "-line done");
 			}
 			erc = BOM_save_window(bom_window);

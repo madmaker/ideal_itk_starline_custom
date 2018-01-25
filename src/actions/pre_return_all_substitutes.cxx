@@ -23,7 +23,16 @@ int get_substitute_base_data(tag_t replacement_form, tag_t* rev, tag_t* item)
 
 	try
 	{
-		erc = GRM_find_relation_type("IMAN_Motion", &temp_relation_type);
+		erc = AOM_ask_value_tag(replacement_form, "sl4_ReplacementPrimary", rev);
+		if(rev == NULLTAG)
+		{
+			WRITE_LOG("%s\n", "BASE IS MISSING");
+		}
+		else
+		{
+			erc = ITEM_ask_item_of_rev(*rev, item);
+		}
+		/*erc = GRM_find_relation_type("IMAN_Motion", &temp_relation_type);
 		erc = GRM_list_secondary_objects_only(replacement_form, temp_relation_type, &related_count, &related);
 		if(related_count > 0)
 		{
@@ -43,7 +52,7 @@ int get_substitute_base_data(tag_t replacement_form, tag_t* rev, tag_t* item)
 		{
 			erc = GRM_find_relation(replacement_form, related[0], temp_relation_type, &temp_relation);
 			erc = GRM_delete_relation(temp_relation);
-		}
+		}*/
 	}
 	catch (int exfail)
 	{
@@ -64,7 +73,8 @@ int restore_all_substitutes(tag_t bvr, tag_t top_replacement_form, int child_bom
 
 	try
 	{
-		erc = GRM_find_relation_type("IMAN_Rendering", &relation_type);
+		//erc = GRM_find_relation_type("IMAN_Rendering", &relation_type);
+		erc = GRM_find_relation_type("SL4_ReplacementRel", &relation_type);
 		erc = GRM_list_secondary_objects_only(top_replacement_form, relation_type, &replacement_forms_count, &replacement_forms);
 
 		// For every item revision related to replacemnet form, we restore substitute, delete relation and delete form
@@ -140,7 +150,7 @@ int pre_return_all_substitutes(METHOD_message_t *msg, va_list args)
 
 	try
 	{
-		WRITE_LOG("%s\n", "-PRE remove all substitutes called");
+		WRITE_LOG("%s\n", "-PRE return all substitutes called");
 
 		erc = GRM_ask_primary(msg->object_tag, &primary_object);
 		erc = GRM_ask_secondary(msg->object_tag, &secondary_object);
@@ -165,10 +175,11 @@ int pre_return_all_substitutes(METHOD_message_t *msg, va_list args)
 			tag_t top_line;
 			int child_bom_lines_count = 0;
 			tag_t* child_bom_lines;
-			erc = get_bom_window_and_top_line_from_bvr(primary_object, &bom_window, &top_line);
+			erc = get_bom_window_and_top_line_from_bvr(primary_object, false, &bom_window, &top_line);
 			erc = BOM_line_ask_all_child_lines(top_line, &child_bom_lines_count, &child_bom_lines);
 
-			erc = GRM_find_relation_type("IMAN_Rendering", &relation_type);
+			//erc = GRM_find_relation_type("IMAN_Rendering", &relation_type);
+			erc = GRM_find_relation_type("SL4_ReplacementRel", &relation_type);
 			erc = GRM_list_secondary_objects_only(primary_object, relation_type, &top_replacement_forms_count, &top_replacement_forms);
 			if(top_replacement_forms_count > 0)
 			{

@@ -18,6 +18,8 @@ int starline_custom_idealplm_register_actions(int * decision, va_list args)
 	int erc = ITK_ok;
 	try
 	{
+		WRITE_LOG("%s\n", "Registering actions...");
+
 		*decision = ALL_CUSTOMIZATIONS;
 
 		METHOD_id_t post_remove_all_substitutes_method;

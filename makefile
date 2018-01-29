@@ -39,6 +39,7 @@ x64_:
 	cl\
 		./src/*.c*\
 		./src/actions/*.c*\
+		./src/action_handlers/*.c*\
 		/c\
 		/nologo\
 		/EHsc\

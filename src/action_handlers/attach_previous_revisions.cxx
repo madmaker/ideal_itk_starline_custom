@@ -86,11 +86,12 @@ int read_arguments(TC_argument_list_t* arguments, char** statuses_to_ignore)
 	return ITK_ok;
 }
 
-int has_no_except_statuses(tag_t object, int statuses_count, tag_t* statuses, logical* result)
+int has_no_except_statuses(tag_t object, int statuses_count, char** statuses, logical* result)
 {
 	WRITE_LOG("%s\n", "Checking statuses");
 	int erc = ITK_ok;
 	logical result_r = true;
+	char release_status_type[WSO_name_size_c+1];
 
 	try
 	{
@@ -99,20 +100,14 @@ int has_no_except_statuses(tag_t object, int statuses_count, tag_t* statuses, lo
 		erc = WSOM_ask_release_status_list(object, &rs_count, &rs_list);
 		for(int i = 0; i < rs_count; i++)
 		{
+			erc = CR_ask_release_status_type(rs_list[i], release_status_type);
 			for(int j = 0; j < statuses_count; j++)
 			{
-				char* one;
-				char* two;
-				erc = AOM_ask_name(rs_list[i], &one);
-				erc = AOM_ask_name(statuses[j], &two);
-				WRITE_LOG("%s=%s\n", one, two);
-				if(rs_list[i] == statuses[j])
+				if(strcmp(release_status_type, statuses[j]) == 0)
 				{
 					WRITE_LOG("%s\n", "Found exception status");
 					result_r = false;
 				}
-				MEM_free(one);
-				MEM_free(two);
 			}
 		}
 		*result = result_r;
@@ -125,7 +120,29 @@ int has_no_except_statuses(tag_t object, int statuses_count, tag_t* statuses, lo
 	return ITK_ok;
 }
 
-int find_prev_revisions_and_add_them(tag_t root_task, tag_t object, int statuses_count, tag_t* statuses)
+int compare_dates(const date_t *date1, const date_t *date2)
+  { if (date1->year != date2->year)
+        return date1->year > date2->year ? 1 : -1;
+
+    if (date1->month != date2->month)
+        return date1->month > date2->month ? 1 : -1;
+
+    if (date1->day != date2->day)
+        return date1->day > date2->day ? 1 : -1;
+
+    if (date1->hour != date2->hour)
+        return date1->hour > date2->hour ? 1 : -1;
+
+    if (date1->minute != date2->minute)
+        return date1->minute > date2->minute ? 1 : -1;
+
+    if (date1->second != date2->second)
+        return date1->second > date2->second ? 1 : -1;
+
+    return 0;
+  }
+
+int find_prev_revisions_and_add_them(tag_t root_task, tag_t object, int statuses_count, char** statuses)
 {
 	WRITE_LOG("%s\n", "Looking for previous revisions");
 	int erc = ITK_ok;
@@ -134,6 +151,8 @@ int find_prev_revisions_and_add_them(tag_t root_task, tag_t object, int statuses
 	tag_t *revisions;
 	logical is_type_of;
 	int revisions_count;
+	date_t object_date;
+	date_t temp_date;
 
 	try
 	{
@@ -143,6 +162,7 @@ int find_prev_revisions_and_add_them(tag_t root_task, tag_t object, int statuses
 		{
 			WRITE_LOG("%s\n", "Is ItemRevision");
 			erc = ITEM_ask_item_of_rev(object, &item);
+			erc = AOM_ask_value_date(object, "creation_date", &object_date);
 			erc = AOM_ask_value_tags(object, "revision_list", &revisions_count, &revisions);
 			int number_to_add = 0;
 			logical result;
@@ -151,13 +171,17 @@ int find_prev_revisions_and_add_them(tag_t root_task, tag_t object, int statuses
 
 			for(int i = 0; i < revisions_count; i++)
 			{
-				erc = has_no_except_statuses(revisions[i], statuses_count, statuses, &result);
-				if(result && object!=revisions[i])
+				erc = AOM_ask_value_date(revisions[i], "creation_date", &temp_date);
+				if(compare_dates(&object_date, &temp_date) > 0)
 				{
-					WRITE_LOG("%s\n", "Adding to attachments");
-					attachments_to_add[number_to_add] = revisions[i];
-					attachments_types_to_add[number_to_add] = EPM_reference_attachment;
-					number_to_add++;
+					erc = has_no_except_statuses(revisions[i], statuses_count, statuses, &result);
+					if(result && object!=revisions[i])
+					{
+						WRITE_LOG("%s\n", "Adding to attachments");
+						attachments_to_add[number_to_add] = revisions[i];
+						attachments_types_to_add[number_to_add] = EPM_reference_attachment;
+						number_to_add++;
+					}
 				}
 			}
 
@@ -172,11 +196,10 @@ int find_prev_revisions_and_add_them(tag_t root_task, tag_t object, int statuses
 	return ITK_ok;
 }
 
-int convert_status_names_to_tags(char* status_names_string, int* statuses_count, tag_t** statuses)
+int convert_status_names_string_to_list(char* status_names_string, int* statuses_count, char*** statuses)
 {
 	WRITE_LOG("%s\n", "Converting status string to list");
 	int erc = ITK_ok;
-	char** status_names;
 	int status_names_count = 1;
 	int count = 0;
 	char* delim = ",";
@@ -196,29 +219,14 @@ int convert_status_names_to_tags(char* status_names_string, int* statuses_count,
 			if(status_names_string[i] == ',') status_names_count++;
 		}
 		WRITE_LOG("%s\n", "Allocating space for list");
-		status_names = (char**) MEM_alloc(sizeof(status_names) * status_names_count);
+		*statuses = (char**) MEM_alloc(sizeof(statuses) * status_names_count);
 		while (temp != NULL)
 		{
 			WRITE_LOG("%s\n", "Allocating space for list entry");
-			status_names[count] = (char*) MEM_alloc(sizeof(status_names[count]) * (strlen(temp)+1));
-			strcpy(status_names[count++], temp);
+			*statuses[count] = (char*) MEM_alloc(sizeof(statuses[count]) * (strlen(temp)+1));
+			strcpy(*statuses[count++], temp);
 		    temp = strtok (NULL, delim);
 		}
-		WRITE_LOG("%s\n", "Allocating space for tag list");
-		*statuses_count = status_names_count;
-		*statuses = (tag_t*) MEM_alloc(sizeof(statuses) * status_names_count);
-		for(int i = 0; i <status_names_count; i++)
-		{
-			WRITE_LOG("%s\n", "Looking for status");
-			erc = CR_find_status_type(status_names[i], statuses[i]);
-		}
-		for(int i = 0; i < status_names_count; i++)
-		{
-			WRITE_LOG("Freeing status:%s\n", status_names[i]);
-			MEM_free(status_names[i]);
-		}
-		WRITE_LOG("%s\n", "Freeing status list");
-		MEM_free(status_names);
 	}
 	catch (int exfail)
 	{
@@ -233,22 +241,22 @@ int attach_previous_revisions(EPM_action_message_t msg)
 	int erc = ITK_ok;
 	tag_t
 		*attachments,
-		root_task,
-		*statuses;
+		root_task;
 	int
 		*attachments_types,
 		attachments_count = 0,
 		statuses_count;
 	char
-		*status_names_to_ignore;
+		*status_names_to_ignore_string,
+		**status_names_to_ignore_list;
 
 	try
 	{
-		erc = read_arguments(msg.arguments, &status_names_to_ignore);
+		erc = read_arguments(msg.arguments, &status_names_to_ignore_string);
 		if(erc!=ITK_ok) throw erc;
 
 		erc = TCTYPE_find_type("ItemRevision", NULL, &item_revision_type);
-		erc = convert_status_names_to_tags(status_names_to_ignore, &statuses_count, &statuses);
+		erc = convert_status_names_string_to_list(status_names_to_ignore_string, &statuses_count, &status_names_to_ignore_list);
 
 		WRITE_LOG("%s\n", "Asking root task and attachmenmts");
 		erc = EPM_ask_root_task(msg.task, &root_task);
@@ -258,13 +266,16 @@ int attach_previous_revisions(EPM_action_message_t msg)
 			if(attachments_types[i]==EPM_target_attachment)
 			{
 				WRITE_LOG("%s\n", "Working with target");
-				find_prev_revisions_and_add_them(root_task, attachments[i], statuses_count, statuses);
+				find_prev_revisions_and_add_them(root_task, attachments[i], statuses_count, status_names_to_ignore_list);
 			}
 		}
 
 		MEM_free(attachments);
 		MEM_free(attachments_types);
-		MEM_free(statuses);
+		for(int i = 0; i < statuses_count; i++)
+		{
+			MEM_free(status_names_to_ignore_list[i]);
+		}
 	}
 	catch (int exfail)
 	{

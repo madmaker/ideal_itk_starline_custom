@@ -3,15 +3,16 @@
 #include <aom.h>
 #include <aom_prop.h>
 #include <item.h>
+#include <ps.h>
 #include <epm_toolkit_tc_utils.h>
 #include <releasestatus.h>
 #include <base_utils/ResultCheck.hxx>
 #include "../misc.hxx"
-#include "attach_previous_revisions.hxx"
+#include "attach_where_used_assemblies.hxx"
 
-tag_t item_revision_type = NULLTAG;
+tag_t awua_item_revision_type = NULLTAG;
 
-int read_arguments(TC_argument_list_t* arguments, char** statuses_to_ignore)
+int awua_read_arguments(TC_argument_list_t* arguments, char** statuses_to_ignore)
 {
 	WRITE_LOG("%s\n", "Reading arguments");
 	int erc = ITK_ok;
@@ -86,7 +87,7 @@ int read_arguments(TC_argument_list_t* arguments, char** statuses_to_ignore)
 	return ITK_ok;
 }
 
-int has_no_except_statuses(tag_t object, int statuses_count, char** statuses, logical* result)
+int awua_has_no_except_statuses(tag_t object, int statuses_count, char** statuses, logical* result)
 {
 	WRITE_LOG("%s\n", "Checking statuses");
 	int erc = ITK_ok;
@@ -122,72 +123,57 @@ int has_no_except_statuses(tag_t object, int statuses_count, char** statuses, lo
 	return ITK_ok;
 }
 
-int compare_dates(const date_t *date1, const date_t *date2)
-  { if (date1->year != date2->year)
-        return date1->year > date2->year ? 1 : -1;
-
-    if (date1->month != date2->month)
-        return date1->month > date2->month ? 1 : -1;
-
-    if (date1->day != date2->day)
-        return date1->day > date2->day ? 1 : -1;
-
-    if (date1->hour != date2->hour)
-        return date1->hour > date2->hour ? 1 : -1;
-
-    if (date1->minute != date2->minute)
-        return date1->minute > date2->minute ? 1 : -1;
-
-    if (date1->second != date2->second)
-        return date1->second > date2->second ? 1 : -1;
-
-    return 0;
-  }
-
-int find_prev_revisions_and_add_them(tag_t root_task, tag_t object, int statuses_count, char** statuses)
+int find_assemblies_and_add_them(tag_t root_task, tag_t object, int statuses_count, char** statuses)
 {
 	WRITE_LOG("%s\n", "Looking for previous revisions");
 	int erc = ITK_ok;
 	tag_t object_type;
-	tag_t item;
-	tag_t *revisions;
+	int assemblies_count = 0;
+	int *levels = 0;
+	tag_t *assemblies = NULL;
 	logical is_type_of;
-	int revisions_count;
-	date_t object_date;
-	date_t temp_date;
 
 	try
 	{
 		erc = TCTYPE_ask_object_type(object, &object_type);
-		erc = TCTYPE_is_type_of(object_type, item_revision_type, &is_type_of);
+		erc = TCTYPE_is_type_of(object_type, awua_item_revision_type, &is_type_of);
 		if(is_type_of)
 		{
 			WRITE_LOG("%s\n", "Is ItemRevision");
-			erc = ITEM_ask_item_of_rev(object, &item);
-			erc = AOM_ask_value_date(object, "creation_date", &object_date);
-			erc = AOM_ask_value_tags(object, "revision_list", &revisions_count, &revisions);
+			erc = PS_where_used_all(object, PS_where_used_all_levels, &assemblies_count, &levels, &assemblies);
 			int number_to_add = 0;
 			logical result;
-			int* attachments_types_to_add = (int*) MEM_alloc(sizeof(int) * revisions_count);
-			tag_t* attachments_to_add = (tag_t*) MEM_alloc(sizeof(tag_t) * revisions_count);
+			int* attachments_types_to_add = (int*) MEM_alloc(sizeof(int) * assemblies_count);
+			tag_t* attachments_to_add = (tag_t*) MEM_alloc(sizeof(tag_t) * assemblies_count);
 
-			for(int i = 0; i < revisions_count; i++)
+			for(int i = 0; i < assemblies_count; i++)
 			{
-				erc = AOM_ask_value_date(revisions[i], "creation_date", &temp_date);
-				if(compare_dates(&object_date, &temp_date) > 0)
+				if(levels[i] == 1) //We work only with one level where used
 				{
-					erc = has_no_except_statuses(revisions[i], statuses_count, statuses, &result);
-					if(result && object!=revisions[i])
+					erc = awua_has_no_except_statuses(assemblies[i], statuses_count, statuses, &result);
+					if(result)
 					{
 						WRITE_LOG("%s\n", "Adding to attachments");
-						attachments_to_add[number_to_add] = revisions[i];
-						attachments_types_to_add[number_to_add] = EPM_reference_attachment;
-						number_to_add++;
+						try
+						{
+							attachments_to_add[number_to_add] = assemblies[i];
+							attachments_types_to_add[number_to_add] = EPM_reference_attachment;
+							number_to_add++;
+						}
+						catch(int exfail)
+						{
+							WRITE_LOG("%s\n", "Adding to attachments failed");
+						}
 					}
 				}
 			}
 
 			erc = EPM_add_attachments(root_task, number_to_add, attachments_to_add, attachments_types_to_add);
+
+			MEM_free(attachments_types_to_add);
+			MEM_free(attachments_to_add);
+			if(levels) MEM_free(levels);
+			if(assemblies) MEM_free(assemblies);
 		}
 	}
 	catch(int exfail)
@@ -198,7 +184,7 @@ int find_prev_revisions_and_add_them(tag_t root_task, tag_t object, int statuses
 	return ITK_ok;
 }
 
-int convert_status_names_string_to_list(char* status_names_string, int* statuses_count, char*** statuses)
+int awua_convert_status_names_string_to_list(char* status_names_string, int* statuses_count, char*** statuses)
 {
 	WRITE_LOG("%s\n", "Converting status string to list");
 	int erc = ITK_ok;
@@ -238,7 +224,7 @@ int convert_status_names_string_to_list(char* status_names_string, int* statuses
 	return ITK_ok;
 }
 
-int attach_previous_revisions(EPM_action_message_t msg)
+int attach_where_used_assemblies(EPM_action_message_t msg)
 {
 	int erc = ITK_ok;
 	tag_t
@@ -254,11 +240,11 @@ int attach_previous_revisions(EPM_action_message_t msg)
 
 	try
 	{
-		erc = read_arguments(msg.arguments, &status_names_to_ignore_string);
+		erc = awua_read_arguments(msg.arguments, &status_names_to_ignore_string);
 		if(erc!=ITK_ok) throw erc;
 
-		erc = TCTYPE_find_type("ItemRevision", NULL, &item_revision_type);
-		erc = convert_status_names_string_to_list(status_names_to_ignore_string, &statuses_count, &status_names_to_ignore_list);
+		erc = TCTYPE_find_type("ItemRevision", NULL, &awua_item_revision_type);
+		erc = awua_convert_status_names_string_to_list(status_names_to_ignore_string, &statuses_count, &status_names_to_ignore_list);
 
 		WRITE_LOG("%s\n", "Asking root task and attachmenmts");
 		erc = EPM_ask_root_task(msg.task, &root_task);
@@ -268,7 +254,7 @@ int attach_previous_revisions(EPM_action_message_t msg)
 			if(attachments_types[i]==EPM_target_attachment)
 			{
 				WRITE_LOG("%s\n", "Working with target");
-				find_prev_revisions_and_add_them(root_task, attachments[i], statuses_count, status_names_to_ignore_list);
+				find_assemblies_and_add_them(root_task, attachments[i], statuses_count, status_names_to_ignore_list);
 			}
 		}
 

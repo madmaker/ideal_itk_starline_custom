@@ -8,7 +8,7 @@
 #include "../misc.hxx"
 #include "assign_form_property_to_targets.hxx"
 
-int read_arguments(TC_argument_list_t* arguments, char** type, char** attribute)
+int read_arguments(TC_argument_list_t* arguments, char** type, char** attribute_name, char** attribute_value)
 {
 	int erc = ITK_ok;
 	int
@@ -22,7 +22,7 @@ int read_arguments(TC_argument_list_t* arguments, char** type, char** attribute)
 	try
 	{
 		arguments_count = TC_number_of_arguments(arguments);
-		if (arguments_count != 2)
+		if (arguments_count != 3)
 		{
 			throw EPM_wrong_number_of_arguments;
 		}
@@ -51,10 +51,19 @@ int read_arguments(TC_argument_list_t* arguments, char** type, char** attribute)
 			        	else if(strcmp("ATTRIBUTE", Flag)==0)
 			        	{
 			        		if (!STR_EMPTY(normal_value)) {
-			        			*attribute = (char *) MEM_alloc(sizeof(char)*(strlen(normal_value)+1));
-			        			strcpy(*attribute, normal_value);
+			        			*attribute_name = (char *) MEM_alloc(sizeof(char)*(strlen(normal_value)+1));
+			        			strcpy(*attribute_name, normal_value);
 			        		} else {
-			        			*attribute = "";
+			        			*attribute_name = "";
+			        		}
+			        	}
+			        	else if(strcmp("VALUE", Flag)==0)
+			        	{
+			        		if (!STR_EMPTY(normal_value)) {
+			        			*attribute_value = (char *) MEM_alloc(sizeof(char)*(strlen(normal_value)+1));
+			        			strcpy(*attribute_value, normal_value);
+			        		} else {
+			        			*attribute_value = "";
 			        		}
 			        	}
 			        }
@@ -131,7 +140,7 @@ int assign_form_property_to_targets(EPM_action_message_t msg)
 
 	try
 	{
-		erc = read_arguments(msg.arguments, &form_type_name, &attribute_name);
+		erc = read_arguments(msg.arguments, &form_type_name, &attribute_name, &attribute_value);
 		if(erc!=ITK_ok) throw erc;
 
 		erc = TCTYPE_find_type(form_type_name, NULL, &form_type);

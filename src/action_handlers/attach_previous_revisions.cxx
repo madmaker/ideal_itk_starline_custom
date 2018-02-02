@@ -53,11 +53,8 @@ int read_arguments(TC_argument_list_t* arguments, char** statuses_to_ignore)
 			        		}
 			        	}
 			        }
-			        if (normal_value != NULL)
-			        {
-			        	MEM_free(normal_value);
-				        normal_value = NULL;
-			        }
+		        	MEM_free(normal_value);
+			        normal_value = NULL;
 			    }
 			    else
 			    {

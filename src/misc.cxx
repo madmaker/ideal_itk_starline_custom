@@ -137,3 +137,15 @@ void ThrowException(char* file, int line, char* call, int ifail)
 		throw ifail;
 	}
 }
+
+/***************************************************************
+ *  Throw exception if tag is null                              *
+ ***************************************************************/
+void ThrowExceptionIfNullTag(char* file, int line, char* var, tag_t toChkTag)
+{
+	if (toChkTag == NULLTAG)
+	{
+		WRITE_LOG("Found NULLTAG for %s at line %d in %s\n",var, line, file);
+		throw NULLTAG_FOUND;
+	}
+}

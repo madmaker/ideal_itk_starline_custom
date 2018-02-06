@@ -5,9 +5,12 @@
 #define STR_EMPTY(str) ((str)[0]=='\0')
 #define WRITE_LOG WriteToSyslog
 #define IFERR_THROW(X) (ThrowException((char*) __FILE__, __LINE__, (char*) #X, X))
+#define IFNULLTAG_THROW(X) (ThrowExceptionIfNullTag((char*) __FILE__, __LINE__, (char*) #X, X))
+#define NULLTAG_FOUND ITK_invalid_nulltag
 
 #include <string>
 #include <tc/tc.h>
+#include <tc_errors.h>
 
 template<class T> class auto_itk_mem_free {
 public:
@@ -37,5 +40,6 @@ char *StrUpr(char *StrInOut);
 int ShowTCMessage(int, char*, int, char*);
 void WriteToSyslog(char * format,...);
 void ThrowException(char*, int, char*, int);
+void ThrowExceptionIfNullTag(char* file, int line, char* var, tag_t toChkTag);
 
 #endif /* MISC_HXX_ */

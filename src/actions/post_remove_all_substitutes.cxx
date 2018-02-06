@@ -52,10 +52,9 @@ int create_form(tag_t* form_r)
 		tag_t form_type_tag = NULLTAG;
 		erc = TCTYPE_find_type(form_type, NULL, &form_type_tag);
 
-		tag_t form_create_input_tag = NULLTAG;
-		erc = TCTYPE_construct_create_input(form_type_tag, &form_create_input_tag);
-		erc = AOM_set_value_string(form_create_input_tag, "object_desc", "description");
-		erc = AOM_set_value_string(form_create_input_tag, "object_name", "name");
+		erc = TCTYPE_construct_create_input(form_type_tag, &form_create_input);
+		erc = AOM_set_value_string(form_create_input, "object_desc", "description");
+		erc = AOM_set_value_string(form_create_input, "object_name", "name");
 
 		erc = TCTYPE_create_object(form_create_input, &form);
 		erc = AOM_save(form);

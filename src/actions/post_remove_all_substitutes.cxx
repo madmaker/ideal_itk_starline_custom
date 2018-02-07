@@ -1,24 +1,21 @@
+#include <bom/bom.h>
 #include <epm/epm.h>
-#include <sa/sa.h>
-#include <ics.h>
-#include <ics2.h>
-#include <ps.h>
-#include <grm.h>
-#include <bom.h>
-#include <form.h>
-#include <tctype.h>
 #include <epm/epm_task_template_itk.h>
+#include <form/form.h>
+#include <ics/ics.h>
+#include <ics/ics2.h>
+#include <ps/ps.h>
+#include <sa/sa.h>
+#include <tc/tc_util.h>
+#include <tccore/grm.h>
+#include <tccore/tctype.h>
 #include <user_exits/epm_toolkit_utils.h>
-#include <tc_util.h>
-#include "post_remove_all_substitutes.hxx"
 #include "../misc.hxx"
-#include <base_utils/ResultCheck.hxx>
+#include "post_remove_all_substitutes.hxx"
 
 int set_substitute_base_data(tag_t replacement_form, tag_t revision)
 {
 	int erc = ITK_ok;
-	tag_t temp_relation_type;
-	tag_t temp_relation;
 
 	try
 	{
@@ -26,9 +23,6 @@ int set_substitute_base_data(tag_t replacement_form, tag_t revision)
 		erc = AOM_set_value_tag(replacement_form, "sl4_ReplacementPrimary", revision);
 		erc = AOM_save(replacement_form);
 		erc = AOM_refresh(replacement_form, FALSE);
-		//erc = GRM_find_relation_type("IMAN_Motion", &temp_relation_type);
-		//erc = GRM_create_relation(replacement_form, revision, temp_relation_type, NULLTAG, &temp_relation);
-		//erc = GRM_save_relation(temp_relation);
 	}
 	catch (int exfail)
 	{
@@ -41,7 +35,6 @@ int set_substitute_base_data(tag_t replacement_form, tag_t revision)
 int create_form(tag_t* form_r)
 {
 	int erc = ITK_ok;
-	//char* form_type = "Pm8_GeneralNoteForm";
 	char* form_type = "SL4_ReplacementForm";
 	tag_t form;
 	tag_t form_create_input;

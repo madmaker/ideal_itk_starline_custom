@@ -1,18 +1,14 @@
 #include <iostream>
 #include <string>
-#include <base_utils/ResultCheck.hxx>
 #include <tc/tc.h>
 #include <property/prop_msg.h>
 #include <tccore/custom.h>
 #include <tccore/method.h>
-#include "actions.hxx"
 #include "../misc.hxx"
+#include "actions.hxx"
 #include "post_remove_all_substitutes.hxx"
 #include "pre_return_all_substitutes.hxx"
 
-/**
- *
- */
 int starline_custom_idealplm_register_actions(int * decision, va_list args)
 {
 	int erc = ITK_ok;

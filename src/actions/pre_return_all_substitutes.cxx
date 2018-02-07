@@ -1,17 +1,16 @@
+#include <bom/bom.h>
 #include <epm/epm.h>
-#include <sa/sa.h>
-#include <ics.h>
-#include <ics2.h>
-#include <ps.h>
-#include <grm.h>
-#include <bom.h>
 #include <epm/epm_task_template_itk.h>
+#include <ics/ics.h>
+#include <ics/ics2.h>
+#include <ps/ps.h>
+#include <sa/sa.h>
+#include <tc/tc_util.h>
+#include <tccore/grm.h>
 #include <user_exits/epm_toolkit_utils.h>
-#include <tc_util.h>
+#include "../misc.hxx"
 #include "pre_return_all_substitutes.hxx"
 #include "post_remove_all_substitutes.hxx"
-#include "../misc.hxx"
-#include <base_utils/ResultCheck.hxx>
 
 int get_substitute_base_data(tag_t replacement_form, tag_t* rev, tag_t* item)
 {
@@ -32,27 +31,6 @@ int get_substitute_base_data(tag_t replacement_form, tag_t* rev, tag_t* item)
 		{
 			erc = ITEM_ask_item_of_rev(*rev, item);
 		}
-		/*erc = GRM_find_relation_type("IMAN_Motion", &temp_relation_type);
-		erc = GRM_list_secondary_objects_only(replacement_form, temp_relation_type, &related_count, &related);
-		if(related_count > 0)
-		{
-			*rev = related[0];
-			erc = ITEM_ask_item_of_rev(related[0], item);
-
-			char* name;
-			erc = AOM_ask_value_string(related[0], "object_name", &name);
-			WRITE_LOG("base name:%s\n", name);
-			MEM_free(name);
-		}
-		else
-		{
-			WRITE_LOG("%s\n", "BASE IS MISSSING");
-		}
-		for(int i = 0; i < related_count; i++)
-		{
-			erc = GRM_find_relation(replacement_form, related[0], temp_relation_type, &temp_relation);
-			erc = GRM_delete_relation(temp_relation);
-		}*/
 	}
 	catch (int exfail)
 	{

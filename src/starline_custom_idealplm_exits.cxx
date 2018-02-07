@@ -1,6 +1,5 @@
 #include <iostream>
 #include <string>
-#include <base_utils/ResultCheck.hxx>
 #include <tc/tc.h>
 #include <tccore/custom.h>
 #include "misc.hxx"
@@ -8,8 +7,11 @@
 #include "actions/actions.hxx"
 #include "action_handlers/action_handlers.hxx"
 
-//cppcheck-suppress unusedFunction
-extern "C" __declspec (dllexport) int starline_custom_idealplm_register_callbacks()
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+int starline_custom_idealplm_register_callbacks()
 {
 	int erc = ITK_ok;
 
@@ -26,3 +28,7 @@ extern "C" __declspec (dllexport) int starline_custom_idealplm_register_callback
 	}
 	return erc;
 }
+
+#ifdef __cplusplus
+}
+#endif

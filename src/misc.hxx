@@ -10,28 +10,7 @@
 
 #include <string>
 #include <tc/tc.h>
-#include <tc_errors.h>
-
-template<class T> class auto_itk_mem_free {
-public:
-	auto_itk_mem_free(T * t = NULL) :
-			m_t(t) {
-	}
-	virtual ~ auto_itk_mem_free() {
-		if (m_t) {
-			MEM_free(m_t);
-			m_t = NULL;
-		}
-	}
-	operator T *() {
-		return m_t;
-	}
-	operator T **() {
-		return &m_t;
-	}
-private:
-	T * m_t;
-};
+#include <tc/tc_errors.h>
 
 bool StartsWith(const std::string & param, const std::string & what);
 void AppendToResult(char*, char*, char*, int);
@@ -42,4 +21,4 @@ void WriteToSyslog(char * format,...);
 void ThrowException(char*, int, char*, int);
 void ThrowExceptionIfNullTag(char* file, int line, char* var, tag_t toChkTag);
 
-#endif /* MISC_HXX_ */
+#endif

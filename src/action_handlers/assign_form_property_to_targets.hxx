@@ -4,6 +4,8 @@
 #include <tc/tc.h>
 #include <epm.h>
 
+int read_arguments(TC_argument_list_t* arguments, char** type, char** attribute_name, char** attribute_value);
+int set_property(tag_t object, char* prop_name, char* prop_value);
 int assign_form_property_to_targets(EPM_action_message_t);
 
 #endif

@@ -1,10 +1,9 @@
-#include <grm.h>
-#include <epm.h>
-#include <aom.h>
-#include <aom_prop.h>
-#include <tctype.h>
-#include <epm_toolkit_tc_utils.h>
-#include <base_utils/ResultCheck.hxx>
+#include <epm/epm.h>
+#include <epm/epm_toolkit_tc_utils.h>
+#include <tccore/aom.h>
+#include <tccore/grm.h>
+#include <tccore/aom_prop.h>
+#include <tccore/tctype.h>
 #include "../misc.hxx"
 #include "assign_form_property_to_targets.hxx"
 

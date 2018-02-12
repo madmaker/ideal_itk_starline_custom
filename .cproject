@@ -5,8 +5,8 @@
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="org.eclipse.cdt.msvc.exe.release.595127807" moduleId="org.eclipse.cdt.core.settings" name="Release">
 				<externalSettings/>
 				<extensions>
-					<extension id="org.eclipse.cdt.core.VCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.PE" point="org.eclipse.cdt.core.BinaryParser"/>
+					<extension id="org.eclipse.cdt.core.VCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
@@ -24,8 +24,8 @@
 								<option id="org.eclipse.cdt.msvc.cl.option.debugFormat.163304343" name="Debug Information Format" superClass="org.eclipse.cdt.msvc.cl.option.debugFormat"/>
 								<option id="org.eclipse.cdt.msvc.cl.option.includes.632944691" name="Include Path (/I)" superClass="org.eclipse.cdt.msvc.cl.option.includes" valueType="includePath">
 									<listOptionValue builtIn="false" value="C:/MVS90/VC/include"/>
-									<listOptionValue builtIn="false" value="C:/SIEMENS/tcroot/include"/>
-									<listOptionValue builtIn="false" value="C:/SIEMENS/tcroot/include_cpp"/>
+									<listOptionValue builtIn="false" value="C:/Siemens/Teamcenter11/include"/>
+									<listOptionValue builtIn="false" value="C:/Siemens/Teamcenter11/include_cpp"/>
 								</option>
 								<inputType id="org.eclipse.cdt.msvc.cl.inputType.c.1384060439" superClass="org.eclipse.cdt.msvc.cl.inputType.c"/>
 							</tool>
@@ -34,16 +34,16 @@
 								<option id="org.eclipse.cdt.msvc.cl.option.debugFormat.219436511" name="Debug Information Format" superClass="org.eclipse.cdt.msvc.cl.option.debugFormat"/>
 								<option id="org.eclipse.cdt.msvc.cl.option.includes.1512494000" name="Include Path (/I)" superClass="org.eclipse.cdt.msvc.cl.option.includes" valueType="includePath">
 									<listOptionValue builtIn="false" value="C:/MVS90/VC/include"/>
-									<listOptionValue builtIn="false" value="C:/SIEMENS/tcroot/include"/>
-									<listOptionValue builtIn="false" value="C:/SIEMENS/tcroot/include_cpp"/>
+									<listOptionValue builtIn="false" value="C:/Siemens/Teamcenter11/include"/>
+									<listOptionValue builtIn="false" value="C:/Siemens/Teamcenter11/include_cpp"/>
 								</option>
 								<inputType id="org.eclipse.cdt.msvc.cl.inputType.1984565893" superClass="org.eclipse.cdt.msvc.cl.inputType"/>
 							</tool>
 							<tool id="org.eclipse.cdt.msvc.rc.exe.release.1758248857" name="Resource Compiler (rc)" superClass="org.eclipse.cdt.msvc.rc.exe.release">
 								<option id="org.eclipse.cdt.msvc.rc.option.includes.264236474" name="Include Path (/I)" superClass="org.eclipse.cdt.msvc.rc.option.includes" valueType="includePath">
 									<listOptionValue builtIn="false" value="C:/MVS90/VC/include"/>
-									<listOptionValue builtIn="false" value="C:/SIEMENS/tcroot/include"/>
-									<listOptionValue builtIn="false" value="C:/SIEMENS/tcroot/include_cpp"/>
+									<listOptionValue builtIn="false" value="C:/Siemens/Teamcenter11/include"/>
+									<listOptionValue builtIn="false" value="C:/Siemens/Teamcenter11/include_cpp"/>
 								</option>
 								<inputType id="org.eclipse.cdt.msvc.rc.inputType.959179988" superClass="org.eclipse.cdt.msvc.rc.inputType"/>
 							</tool>

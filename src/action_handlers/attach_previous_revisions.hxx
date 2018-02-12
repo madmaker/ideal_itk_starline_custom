@@ -1,8 +1,8 @@
 #ifndef ATTACH_PREVIOUS_REVISIONS_HXX_
 #define ATTACH_PREVIOUS_REVISIONS_HXX_
 
+#include <epm/epm.h>
 #include <tc/tc.h>
-#include <epm.h>
 
 int read_arguments(TC_argument_list_t* arguments, char** statuses_to_ignore);
 int has_no_except_statuses(tag_t object, int statuses_count, char** statuses, logical* result);

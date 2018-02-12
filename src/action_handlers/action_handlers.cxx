@@ -1,8 +1,6 @@
 #include <iostream>
 #include <string>
-#include <base_utils/ResultCheck.hxx>
 #include <tc/tc.h>
-#include <property/prop_msg.h>
 #include <tccore/custom.h>
 #include <tccore/method.h>
 #include "../misc.hxx"

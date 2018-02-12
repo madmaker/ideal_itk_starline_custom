@@ -1,12 +1,11 @@
-#include <grm.h>
-#include <epm.h>
-#include <aom.h>
-#include <aom_prop.h>
-#include <item.h>
-#include <ps.h>
-#include <epm_toolkit_tc_utils.h>
-#include <releasestatus.h>
-#include <base_utils/ResultCheck.hxx>
+#include <epm/epm.h>
+#include <epm/epm_toolkit_tc_utils.h>
+#include <ps/ps.h>
+#include <tccore/aom.h>
+#include <tccore/aom_prop.h>
+#include <tccore/grm.h>
+#include <tccore/item.h>
+#include <tccore/releasestatus.h>
 #include "../misc.hxx"
 #include "attach_where_used_assemblies.hxx"
 

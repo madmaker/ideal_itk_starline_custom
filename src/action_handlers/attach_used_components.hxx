@@ -1,8 +1,8 @@
 #ifndef ATTACH_USED_COMPONENTS_HXX_
 #define ATTACH_USED_COMPONENTS_HXX_
 
+#include <epm/epm.h>
 #include <tc/tc.h>
-#include <epm.h>
 
 int auc_read_arguments(TC_argument_list_t* arguments, char** statuses_to_ignore);
 int auc_has_no_except_statuses(tag_t object, int statuses_count, char** statuses, logical* result);

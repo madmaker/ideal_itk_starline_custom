@@ -1,10 +1,9 @@
-#include <epm.h>
-#include <aom.h>
-#include <aom_prop.h>
-#include <item.h>
-#include <sa.h>
-#include <epm_toolkit_tc_utils.h>
-#include <base_utils/ResultCheck.hxx>
+#include <epm/epm.h>
+#include <epm/epm_toolkit_tc_utils.h>
+#include <sa/sa.h>
+#include <tccore/aom.h>
+#include <tccore/aom_prop.h>
+#include <tccore/item.h>
 #include "../misc.hxx"
 #include "check_group_and_role.hxx"
 

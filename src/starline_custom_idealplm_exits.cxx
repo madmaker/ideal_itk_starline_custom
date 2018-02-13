@@ -13,20 +13,23 @@ extern "C" {
 
 int starline_custom_idealplm_register_callbacks()
 {
-	int erc = ITK_ok;
+	int ifail = ITK_ok;
 
 	try
 	{
-		printf("\Loading idealplm custom library...\n");
+		WRITE_LOG("%s", "Loading idealplm custom library... ");
 
-		erc = CUSTOM_register_exit("starline_custom_idealplm", "USER_init_module", starline_custom_idealplm_register_actions);
-		erc = CUSTOM_register_exit("starline_custom_idealplm", "USER_gs_shell_init_module", starline_custom_idealplm_register_action_handlers);
+		IFERR_THROW( CUSTOM_register_exit("starline_custom_idealplm", "USER_init_module", starline_custom_idealplm_register_actions) );
+		IFERR_THROW( CUSTOM_register_exit("starline_custom_idealplm", "USER_gs_shell_init_module", starline_custom_idealplm_register_action_handlers) );
+
+		WRITE_LOG("%s\n", "done");
 	}
-	catch (...)
+	catch (int exfail)
 	{
-		return erc;
+		WRITE_LOG("%s\n", "failed");
+		ifail = exfail;
 	}
-	return erc;
+	return ifail;
 }
 
 #ifdef __cplusplus

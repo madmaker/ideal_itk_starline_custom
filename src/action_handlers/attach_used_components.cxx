@@ -87,23 +87,23 @@ int auc_read_arguments(TC_argument_list_t* arguments, char** statuses_to_ignore)
 
 int auc_has_no_except_statuses(tag_t object, int statuses_count, char** statuses, logical* result)
 {
-	WRITE_LOG("%s\n", "Checking statuses");
-	int erc = ITK_ok;
+	int ifail = ITK_ok;
 	logical result_r = true;
 	char release_status_type[WSO_name_size_c+1];
 
 	try
 	{
+		WRITE_LOG("%s\n", "Checking statuses");
 		int rs_count;
 		tag_t* rs_list;
-		erc = WSOM_ask_release_status_list(object, &rs_count, &rs_list);
+		IFERR_THROW( WSOM_ask_release_status_list(object, &rs_count, &rs_list) );
 		for(int j = 0; j < statuses_count; j++)
 		{
 			if(rs_count==0 && strcmp(statuses[j], "NOT")==0) result_r = false;
 
 			for(int i = 0; i < rs_count; i++)
 			{
-				erc = CR_ask_release_status_type(rs_list[i], release_status_type);
+				IFERR_THROW( CR_ask_release_status_type(rs_list[i], release_status_type) );
 				if(strcmp(release_status_type, statuses[j]) == 0)
 				{
 					WRITE_LOG("%s\n", "Found exception status");
@@ -115,23 +115,23 @@ int auc_has_no_except_statuses(tag_t object, int statuses_count, char** statuses
 	}
 	catch(int exfail)
 	{
-		return exfail;
+		ifail = exfail;
 	}
 
-	return ITK_ok;
+	return ifail;
 }
 
 int find_components_and_add_them(tag_t root_task, tag_t object, int statuses_count, char** statuses)
 {
-	WRITE_LOG("%s\n", "Looking for previous revisions");
-	int erc = ITK_ok;
+	int ifail = ITK_ok;
 	tag_t object_type;
 	logical is_type_of;
 
 	try
 	{
-		erc = TCTYPE_ask_object_type(object, &object_type);
-		erc = TCTYPE_is_type_of(object_type, auc_item_revision_type, &is_type_of);
+		WRITE_LOG("%s\n", "Looking for previous revisions");
+		IFERR_THROW( TCTYPE_ask_object_type(object, &object_type) );
+		IFERR_THROW( TCTYPE_is_type_of(object_type, auc_item_revision_type, &is_type_of) );
 
 		if(is_type_of)
 		{
@@ -139,7 +139,7 @@ int find_components_and_add_them(tag_t root_task, tag_t object, int statuses_cou
 
 			int bvrs_count = 0;
 			tag_t* bvrs = NULL;
-			erc = ITEM_rev_list_bom_view_revs(object, &bvrs_count, &bvrs);
+			IFERR_THROW( ITEM_rev_list_bom_view_revs(object, &bvrs_count, &bvrs) );
 
 			for(int i = 0; i < bvrs_count; i++)
 			{
@@ -150,16 +150,16 @@ int find_components_and_add_them(tag_t root_task, tag_t object, int statuses_cou
 				tag_t revision = NULLTAG;
 				logical result = false;
 
-				erc = get_bom_window_and_top_line_from_bvr(bvrs[i], true, &bom_window, &top_line);
-				erc = BOM_line_ask_all_child_lines(top_line, &child_lines_count, &child_lines);
+				IFERR_THROW( get_bom_window_and_top_line_from_bvr(bvrs[i], true, &bom_window, &top_line) );
+				IFERR_THROW( BOM_line_ask_all_child_lines(top_line, &child_lines_count, &child_lines) );
 				int number_to_add = 0;
 				int* attachments_types_to_add = (int*) MEM_alloc(sizeof(int) * child_lines_count);
 				tag_t* attachments_to_add = (tag_t*) MEM_alloc(sizeof(tag_t) * child_lines_count);
 
 				for(int j = 0; j < child_lines_count; j++)
 				{
-					erc = AOM_ask_value_tag(child_lines[j], "bl_revision", &revision);
-					erc = auc_has_no_except_statuses(revision, statuses_count, statuses, &result);
+					IFERR_THROW( AOM_ask_value_tag(child_lines[j], "bl_revision", &revision) );
+					IFERR_THROW( auc_has_no_except_statuses(revision, statuses_count, statuses, &result) );
 					if(result)
 					{
 						WRITE_LOG("%s\n", "Adding to attachments");
@@ -175,8 +175,8 @@ int find_components_and_add_them(tag_t root_task, tag_t object, int statuses_cou
 						}
 					}
 				}
-				erc = BOM_close_window(bom_window);
-				erc = EPM_add_attachments(root_task, number_to_add, attachments_to_add, attachments_types_to_add);
+				IFERR_THROW( BOM_close_window(bom_window) );
+				IFERR_THROW( EPM_add_attachments(root_task, number_to_add, attachments_to_add, attachments_types_to_add) );
 				MEM_free(attachments_types_to_add);
 				MEM_free(attachments_to_add);
 
@@ -188,16 +188,15 @@ int find_components_and_add_them(tag_t root_task, tag_t object, int statuses_cou
 	}
 	catch(int exfail)
 	{
-		return exfail;
+		ifail = exfail;
 	}
 
-	return ITK_ok;
+	return ifail;
 }
 
 int auc_convert_status_names_string_to_list(char* status_names_string, int* statuses_count, char*** statuses)
 {
-	WRITE_LOG("%s\n", "Converting status string to list");
-	int erc = ITK_ok;
+	int ifail = ITK_ok;
 	int status_names_count = 1;
 	int count = 0;
 	char* delim = ",";
@@ -205,6 +204,7 @@ int auc_convert_status_names_string_to_list(char* status_names_string, int* stat
 
 	try
 	{
+		WRITE_LOG("%s\n", "Converting status string to list");
 		if(strlen(status_names_string) == 0)
 		{
 			*statuses_count = 0;
@@ -228,15 +228,15 @@ int auc_convert_status_names_string_to_list(char* status_names_string, int* stat
 	}
 	catch (int exfail)
 	{
-		return exfail;
+		ifail = exfail;
 	}
 
-	return ITK_ok;
+	return ifail;
 }
 
 int attach_used_components(EPM_action_message_t msg)
 {
-	int erc = ITK_ok;
+	int ifail = ITK_ok;
 	tag_t
 		*attachments,
 		root_task;
@@ -250,21 +250,20 @@ int attach_used_components(EPM_action_message_t msg)
 
 	try
 	{
-		erc = auc_read_arguments(msg.arguments, &status_names_to_ignore_string);
-		if(erc!=ITK_ok) throw erc;
+		IFERR_THROW( auc_read_arguments(msg.arguments, &status_names_to_ignore_string) );
 
-		erc = TCTYPE_find_type("ItemRevision", NULL, &auc_item_revision_type);
-		erc = auc_convert_status_names_string_to_list(status_names_to_ignore_string, &statuses_count, &status_names_to_ignore_list);
+		IFERR_THROW( TCTYPE_find_type("ItemRevision", NULL, &auc_item_revision_type) );
+		IFERR_THROW( auc_convert_status_names_string_to_list(status_names_to_ignore_string, &statuses_count, &status_names_to_ignore_list) );
 
 		WRITE_LOG("%s\n", "Asking root task and attachmenmts");
-		erc = EPM_ask_root_task(msg.task, &root_task);
-		erc = EPM_ask_all_attachments(root_task, &attachments_count, &attachments, &attachments_types);
+		IFERR_THROW( EPM_ask_root_task(msg.task, &root_task) );
+		IFERR_THROW( EPM_ask_all_attachments(root_task, &attachments_count, &attachments, &attachments_types) );
 		for(int i = 0; i < attachments_count; i++)
 		{
 			if(attachments_types[i]==EPM_target_attachment)
 			{
 				WRITE_LOG("%s\n", "Working with target");
-				find_components_and_add_them(root_task, attachments[i], statuses_count, status_names_to_ignore_list);
+				IFERR_THROW( find_components_and_add_them(root_task, attachments[i], statuses_count, status_names_to_ignore_list) );
 			}
 		}
 
@@ -277,8 +276,8 @@ int attach_used_components(EPM_action_message_t msg)
 	}
 	catch (int exfail)
 	{
-		return exfail;
+		ifail = exfail;
 	}
 
-	return ITK_ok;
+	return ifail;
 }

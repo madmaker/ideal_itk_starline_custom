@@ -81,7 +81,7 @@ int cgar_read_arguments(TC_argument_list_t* arguments, char** role)
 
 int check_group_and_role(EPM_action_message_t msg)
 {
-	int erc = ITK_ok;
+	int ifail = ITK_ok;
 	tag_t
 		*attachments,
 		root_task,
@@ -100,18 +100,18 @@ int check_group_and_role(EPM_action_message_t msg)
 	{
 		WRITE_LOG("%s\n", "Asking root task and attachmenmts");
 
-		erc = cgar_read_arguments(msg.arguments, &argument_role_name);
-		erc = SA_find_role(argument_role_name, &argument_role);
+		IFERR_THROW( cgar_read_arguments(msg.arguments, &argument_role_name) );
+		IFERR_THROW( SA_find_role(argument_role_name, &argument_role) );
 		MEM_free(argument_role_name);
 		if(argument_role == NULL) throw SA_role_name_empty;
 
-		erc = SA_ask_current_groupmember(&group_member);
-		erc = SA_ask_groupmember_group(group_member, &user_group);
-		erc = SA_ask_groupmember_role(group_member, &user_role);
+		IFERR_THROW( SA_ask_current_groupmember(&group_member) );
+		IFERR_THROW( SA_ask_groupmember_group(group_member, &user_group) );
+		IFERR_THROW( SA_ask_groupmember_role(group_member, &user_role) );
 
 
-		erc = EPM_ask_root_task(msg.task, &root_task);
-		erc = EPM_ask_all_attachments(root_task, &attachments_count, &attachments, &attachments_types);
+		IFERR_THROW( EPM_ask_root_task(msg.task, &root_task) );
+		IFERR_THROW( EPM_ask_all_attachments(root_task, &attachments_count, &attachments, &attachments_types) );
 
 		int* attachments_types_to_change = (int*) MEM_alloc(sizeof(int) * attachments_count);
 		tag_t* attachments_to_change = (tag_t*) MEM_alloc(sizeof(tag_t) * attachments_count);
@@ -121,7 +121,7 @@ int check_group_and_role(EPM_action_message_t msg)
 			if(attachments_types[i]==EPM_target_attachment)
 			{
 				WRITE_LOG("%s\n", "---");
-				erc = AOM_ask_group(attachments[i], &temp_group);
+				IFERR_THROW( AOM_ask_group(attachments[i], &temp_group) );
 				if(user_group != temp_group || argument_role != user_role)
 				{
 					attachments_to_change[attachments_to_change_count] = attachments[i];
@@ -131,8 +131,8 @@ int check_group_and_role(EPM_action_message_t msg)
 			}
 		}
 
-		erc = EPM_remove_attachments(root_task, attachments_to_change_count, attachments_to_change);
-		erc = EPM_add_attachments(root_task, attachments_to_change_count, attachments_to_change, attachments_types_to_change);
+		IFERR_THROW( EPM_remove_attachments(root_task, attachments_to_change_count, attachments_to_change) );
+		IFERR_THROW( EPM_add_attachments(root_task, attachments_to_change_count, attachments_to_change, attachments_types_to_change) );
 
 		MEM_free(attachments);
 		MEM_free(attachments_types);
@@ -141,8 +141,8 @@ int check_group_and_role(EPM_action_message_t msg)
 	}
 	catch (int exfail)
 	{
-		return exfail;
+		ifail = exfail;
 	}
 
-	return ITK_ok;
+	return ifail;
 }

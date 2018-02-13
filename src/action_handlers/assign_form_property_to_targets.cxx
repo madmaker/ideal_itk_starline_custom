@@ -98,26 +98,26 @@ int read_arguments(TC_argument_list_t* arguments, char** type, char** attribute_
 
 int set_property(tag_t object, char* prop_name, char* prop_value)
 {
-	int erc = ITK_ok;
+	int ifail = ITK_ok;
 
 	try
 	{
-		erc = AOM_refresh(object, TRUE);
-		erc = AOM_set_value_string(object, prop_name, prop_value);
-		erc = AOM_save(object);
-		erc = AOM_refresh(object, FALSE);
+		IFERR_THROW( AOM_refresh(object, TRUE) );
+		IFERR_THROW( AOM_set_value_string(object, prop_name, prop_value) );
+		IFERR_THROW( AOM_save(object) );
+		IFERR_THROW( AOM_refresh(object, FALSE) );
 	}
 	catch(int exfail)
 	{
-		return exfail;
+		ifail = exfail;
 	}
 
-	return ITK_ok;
+	return ifail;
 }
 
 int assign_form_property_to_targets(EPM_action_message_t msg)
 {
-	int erc = ITK_ok;
+	int ifail = ITK_ok;
 	tag_t
 		*attachments,
 		root_task,
@@ -136,23 +136,22 @@ int assign_form_property_to_targets(EPM_action_message_t msg)
 
 	try
 	{
-		erc = read_arguments(msg.arguments, &form_type_name, &attribute_name, &attribute_value);
-		if(erc!=ITK_ok) throw erc;
+		IFERR_THROW( read_arguments(msg.arguments, &form_type_name, &attribute_name, &attribute_value) );
 
-		erc = TCTYPE_find_type(form_type_name, NULL, &form_type);
+		IFERR_THROW( TCTYPE_find_type(form_type_name, NULL, &form_type) );
 
-		erc = EPM_ask_root_task(msg.task, &root_task);
-		erc = EPM_ask_all_attachments(root_task, &attachments_count, &attachments, &attachments_types);
+		IFERR_THROW( EPM_ask_root_task(msg.task, &root_task) );
+		IFERR_THROW( EPM_ask_all_attachments(root_task, &attachments_count, &attachments, &attachments_types) );
 		for(int i = 0; i < attachments_count; i++)
 		{
 			if(attachments_types[i]==EPM_target_attachment)
 			{
-				erc = TCTYPE_ask_object_type(attachments[i], &temp_type);
-				erc = TCTYPE_is_type_of(temp_type, form_type, &is_type_of);
+				IFERR_THROW( TCTYPE_ask_object_type(attachments[i], &temp_type) );
+				IFERR_THROW( TCTYPE_is_type_of(temp_type, form_type, &is_type_of) );
 				if(is_type_of)
 				{
 					target_form = attachments[i];
-					erc = AOM_ask_value_string(target_form, attribute_name, &attribute_value);
+					IFERR_THROW( AOM_ask_value_string(target_form, attribute_name, &attribute_value) );
 				}
 			}
 		}
@@ -161,7 +160,7 @@ int assign_form_property_to_targets(EPM_action_message_t msg)
 		{
 			if(attachments_types[i]==EPM_target_attachment)
 			{
-				erc = TCTYPE_ask_object_type(attachments[i], &temp_type);
+				IFERR_THROW( TCTYPE_ask_object_type(attachments[i], &temp_type) );
 				set_property(attachments[i], attribute_name, attribute_value);
 			}
 		}
@@ -174,8 +173,8 @@ int assign_form_property_to_targets(EPM_action_message_t msg)
 	}
 	catch (int exfail)
 	{
-		return exfail;
+		ifail = exfail;
 	}
 
-	return ITK_ok;
+	return ifail;
 }

@@ -7,7 +7,7 @@
 #include "../misc.hxx"
 #include "assign_form_property_to_targets.hxx"
 
-int read_arguments(TC_argument_list_t* arguments, char** type, char** attribute_name, char** attribute_value)
+int read_arguments(TC_argument_list_t* arguments, char** type, char** attribute_name)
 {
 	int erc = ITK_ok;
 	int
@@ -54,15 +54,6 @@ int read_arguments(TC_argument_list_t* arguments, char** type, char** attribute_
 			        			strcpy(*attribute_name, normal_value);
 			        		} else {
 			        			*attribute_name = "";
-			        		}
-			        	}
-			        	else if(strcmp("VALUE", Flag)==0)
-			        	{
-			        		if (!STR_EMPTY(normal_value)) {
-			        			*attribute_value = (char *) MEM_alloc(sizeof(char)*(strlen(normal_value)+1));
-			        			strcpy(*attribute_value, normal_value);
-			        		} else {
-			        			*attribute_value = "";
 			        		}
 			        	}
 			        }
@@ -136,7 +127,7 @@ int assign_form_property_to_targets(EPM_action_message_t msg)
 
 	try
 	{
-		IFERR_THROW( read_arguments(msg.arguments, &form_type_name, &attribute_name, &attribute_value) );
+		IFERR_THROW( read_arguments(msg.arguments, &form_type_name, &attribute_name) );
 
 		IFERR_THROW( TCTYPE_find_type(form_type_name, NULL, &form_type) );
 

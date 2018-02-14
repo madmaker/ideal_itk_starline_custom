@@ -7,11 +7,12 @@
 #include "actions/actions.hxx"
 #include "action_handlers/action_handlers.hxx"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+//#ifdef __cplusplus
+//extern "C" {
+//#endif
 
-int starline_custom_idealplm_register_callbacks()
+//int starline_custom_idealplm_register_callbacks()
+extern "C" __declspec (dllexport) int starline_custom_idealplm_register_callbacks()
 {
 	int ifail = ITK_ok;
 
@@ -32,6 +33,6 @@ int starline_custom_idealplm_register_callbacks()
 	return ifail;
 }
 
-#ifdef __cplusplus
-}
-#endif
+//#ifdef __cplusplus
+//}
+//#endif

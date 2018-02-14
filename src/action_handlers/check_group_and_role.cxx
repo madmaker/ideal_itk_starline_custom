@@ -9,8 +9,7 @@
 
 int cgar_read_arguments(TC_argument_list_t* arguments, char** role)
 {
-	WRITE_LOG("%s\n", "Reading arguments");
-	int erc = ITK_ok;
+	int ifail = ITK_ok;
 	int
 		arguments_count = 0;
 	char
@@ -21,62 +20,60 @@ int cgar_read_arguments(TC_argument_list_t* arguments, char** role)
 
 	try
 	{
+		WRITE_LOG("%s\n", "Reading arguments");
 		arguments_count = TC_number_of_arguments(arguments);
 		if (arguments_count != 1)
 		{
 			throw EPM_wrong_number_of_arguments;
 		}
+		*role = "";
 
-		for (int numctr=0; numctr<arguments_count && erc==ITK_ok;numctr++)
+		for (int i = 0; i < arguments_count; i++)
 		{
-			erc = ITK_ask_argument_named_value(TC_next_argument(arguments), &flag, &value);
-			if (erc == ITK_ok)
+			WRITE_LOG("%s\n", "Asking named value");
+			IFERR_THROW( ITK_ask_argument_named_value(TC_next_argument(arguments), &flag, &value) );
+			WRITE_LOG("%s\n", "No errors");
+			IFERR_THROW( EPM_substitute_keyword(value, &normal_value) );
+			if (normal_value != NULL)
 			{
-				erc = EPM_substitute_keyword(value,&normal_value);
-			    if (normal_value != NULL)
+				WRITE_LOG("%s\n", "Normal value not NULL");
+			    StrCpy(Flag,256,flag);
+			    StrUpr(Flag);
+			    if (strcmp("ROLE", Flag)==0)
 			    {
-			    	StrCpy(Flag,256,flag);
-			        StrUpr(Flag);
-			        if (erc == ITK_ok)
-			        {
-			        	if (strcmp("ROLE", Flag)==0)
-			        	{
-			        		if (!STR_EMPTY(normal_value)) {
-			        			*role = (char *) MEM_alloc(sizeof(char)*(strlen(normal_value)+1));
-				                strcpy(*role, normal_value);
-			        		} else {
-			        			*role = "";
-			        		}
-			        	}
+			    	WRITE_LOG("%s\n", "Its except");
+			        if (!STR_EMPTY(normal_value)) {
+			        	*role = (char *) MEM_alloc(sizeof(char)*(strlen(normal_value)+1));
+			        	strcpy(*role, normal_value);
+			        	WRITE_LOG("%s\n", *role);
+			        } else {
+			        	*role = "";
 			        }
-		        	MEM_free(normal_value);
-			        normal_value = NULL;
 			    }
-			    else
-			    {
-			    	WRITE_LOG("%s\n", "Empty attribute");
-		   		}
-				if (flag != NULL) {
-					MEM_free(flag);
-					flag = NULL;
-				}
-				if (value != NULL) {
-					MEM_free(value);
-					value = NULL;
-				}
+		        MEM_free(normal_value);
+			    normal_value = NULL;
 			}
 			else
 			{
-				WRITE_LOG("Error: rcode1=%i\n", erc);
+				WRITE_LOG("%s\n", "Empty attribute");
+		   	}
+			if (flag != NULL) {
+				MEM_free(flag);
+				flag = NULL;
+			}
+			if (value != NULL) {
+				MEM_free(value);
+				value = NULL;
 			}
 		}
+		WRITE_LOG("%s\n", "Reading arguments is done");
 	}
 	catch (int exfail)
 	{
-		return exfail;
+		ifail = exfail;
 	}
 
-	return ITK_ok;
+	return ifail;
 }
 
 int check_group_and_role(EPM_action_message_t msg)

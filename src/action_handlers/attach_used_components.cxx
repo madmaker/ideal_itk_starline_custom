@@ -235,12 +235,12 @@ int attach_used_components(EPM_action_message_t msg)
 {
 	int ifail = ITK_ok;
 	tag_t
-		*attachments,
-		root_task;
+		*attachments = NULL,
+		root_task = NULLTAG;
 	int
-		*attachments_types,
+		*attachments_types = NULL,
 		attachments_count = 0,
-		statuses_count;
+		statuses_count = 0;
 	char
 		*status_names_to_ignore_string,
 		**status_names_to_ignore_list;
@@ -264,16 +264,17 @@ int attach_used_components(EPM_action_message_t msg)
 			}
 		}
 
-		MEM_free(attachments);
-		MEM_free(attachments_types);
-		for(int i = 0; i < statuses_count; i++)
-		{
-			MEM_free(status_names_to_ignore_list[i]);
-		}
 	}
 	catch (int exfail)
 	{
 		ifail = exfail;
+	}
+
+	if(attachments!=NULL) MEM_free(attachments); attachments = NULL;
+	if(attachments_types!=NULL) MEM_free(attachments_types); attachments_types = NULL;
+	for(int i = 0; i < statuses_count; i++)
+	{
+		MEM_free(status_names_to_ignore_list[i]);
 	}
 
 	return ifail;

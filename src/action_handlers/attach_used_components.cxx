@@ -101,6 +101,7 @@ int auc_has_no_except_statuses(tag_t object, int statuses_count, char** statuses
 			for(int i = 0; i < rs_count; i++)
 			{
 				IFERR_THROW( CR_ask_release_status_type(rs_list[i], release_status_type) );
+				WRITE_LOG("Comparing [%s]==[%s]\n", statuses[j], release_status_type);
 				if(strcmp(release_status_type, statuses[j]) == 0)
 				{
 					WRITE_LOG("%s\n", "Found exception status");
@@ -197,36 +198,53 @@ int auc_convert_status_names_string_to_list(char* status_names_string, int* stat
 	int status_names_count = 1;
 	int count = 0;
 	char* delim = ",";
-	char *temp = strtok (status_names_string, delim);
+	char* temp;
+	char* templine = NULL;
+	char** temp_statuses;
+
 
 	try
 	{
-		WRITE_LOG("%s\n", "Converting status string to list");
 		if(strlen(status_names_string) == 0)
 		{
 			*statuses_count = 0;
-			*statuses = NULLTAG;
+			*statuses = NULL;
 			return ITK_ok;
 		}
 
-		for(int i = 0; i < strlen(status_names_string); i++)
+		templine = (char*) MEM_alloc(sizeof(*status_names_string) * (strlen(status_names_string)+1));
+		strcpy(templine, status_names_string);
+
+		for(int i = 0; i < strlen(templine); i++)
 		{
-			if(status_names_string[i] == ',') status_names_count++;
+			if(templine[i] == ',') status_names_count++;
+			WRITE_LOG("%s\n", "One more status");
 		}
+
+		WRITE_LOG("%s\n", "Converting status string to list");
+		temp = strtok (templine, delim);
+
 		WRITE_LOG("%s\n", "Allocating space for list");
-		*statuses = (char**) MEM_alloc(sizeof(statuses) * status_names_count);
+		temp_statuses = (char**) MEM_alloc(sizeof(*temp_statuses) * status_names_count);
+
 		while (temp != NULL)
 		{
 			WRITE_LOG("%s\n", "Allocating space for list entry");
-			*statuses[count] = (char*) MEM_alloc(sizeof(statuses[count]) * (strlen(temp)+1));
-			strcpy(*statuses[count++], temp);
+			temp_statuses[count] = (char*) MEM_alloc(sizeof(*temp_statuses[count]) * (strlen(temp)+1));
+			strcpy(temp_statuses[count++], temp);
+
 		    temp = strtok (NULL, delim);
 		}
+
+		*statuses_count = status_names_count;
+		*statuses = temp_statuses;
 	}
 	catch (int exfail)
 	{
 		ifail = exfail;
 	}
+
+	if(templine!=NULL) MEM_free(templine); templine = NULL;
 
 	return ifail;
 }

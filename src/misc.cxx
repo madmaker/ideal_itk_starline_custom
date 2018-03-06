@@ -149,3 +149,8 @@ void ThrowExceptionIfNullTag(char* file, int line, char* var, tag_t toChkTag)
 		throw NULLTAG_FOUND;
 	}
 }
+
+int cmpfunc(const void * a, const void * b)
+{
+	return (*(int*) a - *(int*) b);
+}

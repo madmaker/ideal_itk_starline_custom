@@ -41,7 +41,7 @@ int cgar_read_arguments(TC_argument_list_t* arguments, char** role)
 			    StrUpr(Flag);
 			    if (strcmp("ROLE", Flag)==0)
 			    {
-			    	WRITE_LOG("%s\n", "Its except");
+			    	WRITE_LOG("%s\n", "Its role");
 			        if (!STR_EMPTY(normal_value)) {
 			        	*role = (char *) MEM_alloc(sizeof(char)*(strlen(normal_value)+1));
 			        	strcpy(*role, normal_value);

@@ -7,6 +7,7 @@
 #include <tccore/releasestatus.h>
 #include "../misc.hxx"
 #include "attach_previous_revisions.hxx"
+#include "rename_items_for_revisions_from_targets.hxx"
 
 int rename_item_as_revision(tag_t revision, tag_t item, tag_t root_task)
 {
@@ -37,12 +38,12 @@ int rename_item_as_revision(tag_t revision, tag_t item, tag_t root_task)
 	return ifail;
 }
 
-int move_item_to_refs(tag_t item, tag_t root_task)
+int move_object_to_refs(tag_t object, tag_t root_task)
 {
 	int ifail = ITK_ok;
 	int number_to_add = 1;
 	int attachments_types_to_add[] = { EPM_reference_attachment };
-	tag_t attachments_to_add[] = { item };
+	tag_t attachments_to_add[] = { object };
 
 	try
 	{
@@ -72,7 +73,7 @@ int rename_item_or_move_to_refs_if_locked(tag_t revision, tag_t root_task)
 		IFERR_THROW( AOM_ask_value_string(item, "checked_out", &checked_out) );
 		if(strcmp(checked_out, "Y")==0)
 		{
-			IFERR_THROW( move_item_to_refs(item, root_task) );
+			IFERR_THROW( move_object_to_refs(item, root_task) );
 		}
 		else
 		{

@@ -20,5 +20,6 @@ int ShowTCMessage(int, char*, int, char*);
 void WriteToSyslog(char * format,...);
 void ThrowException(char*, int, char*, int);
 void ThrowExceptionIfNullTag(char* file, int line, char* var, tag_t toChkTag);
+int cmpfunc(const void *, const void *);
 
 #endif

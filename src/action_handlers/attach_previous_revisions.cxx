@@ -202,42 +202,58 @@ int find_prev_revisions_and_add_them(tag_t root_task, tag_t object, int statuses
 int convert_status_names_string_to_list(char* status_names_string, int* statuses_count, char*** statuses)
 {
 	int ifail = ITK_ok;
-	int status_names_count = 1;
-	int count = 0;
-	char* delim = ",";
-	char *temp = "";
+		int status_names_count = 1;
+		int count = 0;
+		char* delim = ",";
+		char* temp;
+		char* templine = NULL;
+		char** temp_statuses;
 
-	try
-	{
-		WRITE_LOG("%s\n", "Converting status string to list");
-		if(STR_EMPTY(status_names_string))
-		{
-			*statuses_count = 0;
-			*statuses = NULL;
-			return ITK_ok;
-		}
-		temp = strtok (status_names_string, delim);
 
-		for(int i = 0; i < strlen(status_names_string); i++)
+		try
 		{
-			if(status_names_string[i] == ',') status_names_count++;
-		}
-		WRITE_LOG("%s\n", "Allocating space for list");
-		*statuses = (char**) MEM_alloc(sizeof(statuses) * status_names_count);
-		while (temp != NULL)
-		{
-			WRITE_LOG("%s\n", "Allocating space for list entry");
-			*statuses[count] = (char*) MEM_alloc(sizeof(statuses[count]) * (strlen(temp)+1));
-			strcpy(*statuses[count++], temp);
-		    temp = strtok (NULL, delim);
-		}
-	}
-	catch (int exfail)
-	{
-		ifail = exfail;
-	}
+			if(strlen(status_names_string) == 0)
+			{
+				*statuses_count = 0;
+				*statuses = NULL;
+				return ITK_ok;
+			}
 
-	return ifail;
+			templine = (char*) MEM_alloc(sizeof(*status_names_string) * (strlen(status_names_string)+1));
+			strcpy(templine, status_names_string);
+
+			for(int i = 0; i < strlen(templine); i++)
+			{
+				if(templine[i] == ',') status_names_count++;
+				WRITE_LOG("%s\n", "One more status");
+			}
+
+			WRITE_LOG("%s\n", "Converting status string to list");
+			temp = strtok (templine, delim);
+
+			WRITE_LOG("%s\n", "Allocating space for list");
+			temp_statuses = (char**) MEM_alloc(sizeof(*temp_statuses) * status_names_count);
+
+			while (temp != NULL)
+			{
+				WRITE_LOG("%s\n", "Allocating space for list entry");
+				temp_statuses[count] = (char*) MEM_alloc(sizeof(*temp_statuses[count]) * (strlen(temp)+1));
+				strcpy(temp_statuses[count++], temp);
+
+			    temp = strtok (NULL, delim);
+			}
+
+			*statuses_count = status_names_count;
+			*statuses = temp_statuses;
+		}
+		catch (int exfail)
+		{
+			ifail = exfail;
+		}
+
+		if(templine!=NULL) MEM_free(templine); templine = NULL;
+
+		return ifail;
 }
 
 int attach_previous_revisions(EPM_action_message_t msg)

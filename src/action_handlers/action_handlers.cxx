@@ -12,6 +12,9 @@
 #include "check_group_and_role.hxx"
 #include "rename_items_for_revisions_from_targets.hxx"
 #include "export_plmxml.hxx"
+#include "attach_as_refs_revs_related_to_form.hxx"
+#include "set_change_notice_number.hxx"
+#include "no_reference_attachments.hxx"
 
 int starline_custom_idealplm_register_action_handlers(int * decision, va_list args)
 {
@@ -31,6 +34,9 @@ int starline_custom_idealplm_register_action_handlers(int * decision, va_list ar
 		IFERR_THROW( EPM_register_action_handler("IDEALPLM_CheckGroupAndRole", "", check_group_and_role) );
 		IFERR_THROW( EPM_register_action_handler("IDEALPLM_RenameItemsForRevisionsFromTargets", "", rename_items_for_revisions_from_targets) );
 		IFERR_THROW( EPM_register_action_handler("IDEALPLM_ExportPLMXMLforSAP", "", export_plmxml) );
+		IFERR_THROW( EPM_register_action_handler("IDEALPLM_AttachRevsAsRefsIfRelatedToForm", "", attach_as_refs_revs_related_to_form) );
+		IFERR_THROW( EPM_register_action_handler("IDEALPLM_SetChangeNoticeNumber", "", set_change_notice_number) );
+		IFERR_THROW( EPM_register_rule_handler("IDEALPLM_NO_REFERENCE_ATTACHMENTS", "Success if there are no reference attachments", no_reference_attachments) );
 
 		WRITE_LOG("%s\n", "done");
 	}

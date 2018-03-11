@@ -1,4 +1,5 @@
 #include <epm/epm.h>
+#include <tc/emh.h>
 #include "../misc.hxx"
 #include "no_reference_attachments.hxx"
 
@@ -28,6 +29,7 @@ EPM_decision_t no_reference_attachments(EPM_rule_message_t msg)
 			if(attachments_types[i]==EPM_reference_attachment)
 			{
 				WRITE_LOG("%s\n", "Found reference");
+				IFERR_THROW( EMH_store_error_s2(EMH_severity_error, EPM_target_wrong_number_of_refs, "EMH_severity_error", "EPM_nogo") );
 				decision = EPM_nogo;
 				break;
 			}

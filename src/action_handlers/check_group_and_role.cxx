@@ -80,7 +80,8 @@ int check_group_and_role(EPM_action_message_t msg)
 {
 	int ifail = ITK_ok;
 	tag_t
-		*attachments,
+		*attachments = NULL,
+		*attachments_to_change = NULL,
 		root_task,
 		group_member,
 		user_group,
@@ -88,9 +89,10 @@ int check_group_and_role(EPM_action_message_t msg)
 		user_role,
 		argument_role = NULL;
 	int
-		*attachments_types,
+		*attachments_types = NULL,
 		attachments_count = 0,
-		attachments_to_change_count = 0;
+		attachments_to_change_count = 0,
+		*attachments_types_to_change;
 	char* argument_role_name;
 
 	try
@@ -110,8 +112,8 @@ int check_group_and_role(EPM_action_message_t msg)
 		IFERR_THROW( EPM_ask_root_task(msg.task, &root_task) );
 		IFERR_THROW( EPM_ask_all_attachments(root_task, &attachments_count, &attachments, &attachments_types) );
 
-		int* attachments_types_to_change = (int*) MEM_alloc(sizeof(int) * attachments_count);
-		tag_t* attachments_to_change = (tag_t*) MEM_alloc(sizeof(tag_t) * attachments_count);
+		attachments_types_to_change = (int*) MEM_alloc(sizeof(int) * attachments_count);
+		attachments_to_change = (tag_t*) MEM_alloc(sizeof(tag_t) * attachments_count);
 
 		for(int i = 0; i < attachments_count; i++)
 		{
@@ -119,7 +121,9 @@ int check_group_and_role(EPM_action_message_t msg)
 			{
 				WRITE_LOG("%s\n", "---");
 				IFERR_THROW( AOM_ask_group(attachments[i], &temp_group) );
-				if(user_group != temp_group || argument_role != user_role)
+				if(user_group == temp_group) WRITE_LOG("%s\n", "Group is the same");
+				if(argument_role == user_role) WRITE_LOG("%s\n", "Role is the same");
+				if(user_group != temp_group || user_role != argument_role)
 				{
 					attachments_to_change[attachments_to_change_count] = attachments[i];
 					attachments_types_to_change[attachments_to_change_count] = EPM_reference_attachment;
@@ -130,16 +134,16 @@ int check_group_and_role(EPM_action_message_t msg)
 
 		IFERR_THROW( EPM_remove_attachments(root_task, attachments_to_change_count, attachments_to_change) );
 		IFERR_THROW( EPM_add_attachments(root_task, attachments_to_change_count, attachments_to_change, attachments_types_to_change) );
-
-		MEM_free(attachments);
-		MEM_free(attachments_types);
-		MEM_free(attachments_to_change);
-		MEM_free(attachments_types_to_change);
 	}
 	catch (int exfail)
 	{
 		ifail = exfail;
 	}
+
+	if(attachments!=NULL) MEM_free(attachments); attachments = NULL;
+	if(attachments_types!=NULL) MEM_free(attachments_types); attachments_types = NULL;
+	if(attachments_to_change!=NULL) MEM_free(attachments_to_change); attachments_to_change = NULL;
+	if(attachments_types_to_change!=NULL) MEM_free(attachments_types_to_change); attachments_types_to_change = NULL;
 
 	return ifail;
 }

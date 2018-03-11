@@ -8,6 +8,7 @@
 #include <tccore/releasestatus.h>
 #include "../misc.hxx"
 #include "attach_where_used_assemblies.hxx"
+#include "attach_used_components.hxx"
 
 tag_t awua_item_revision_type = NULLTAG;
 
@@ -116,7 +117,7 @@ int awua_has_no_except_statuses(tag_t object, int statuses_count, char** statuse
 	return ifail;
 }
 
-int find_assemblies_and_add_them(tag_t root_task, tag_t object, int statuses_count, char** statuses)
+int find_assemblies_and_add_them(tag_t root_task, tag_t object, int statuses_count, char** statuses, int attachments_count, tag_t* attachments)
 {
 	int ifail = ITK_ok;
 	tag_t object_type;
@@ -135,7 +136,8 @@ int find_assemblies_and_add_them(tag_t root_task, tag_t object, int statuses_cou
 			WRITE_LOG("%s\n", "Is ItemRevision");
 			IFERR_THROW( PS_where_used_all(object, PS_where_used_all_levels, &assemblies_count, &levels, &assemblies) );
 			int number_to_add = 0;
-			logical result;
+			logical result = false;
+			logical already_is_attachment = false;
 			int* attachments_types_to_add = (int*) MEM_alloc(sizeof(int) * assemblies_count);
 			tag_t* attachments_to_add = (tag_t*) MEM_alloc(sizeof(tag_t) * assemblies_count);
 
@@ -144,6 +146,7 @@ int find_assemblies_and_add_them(tag_t root_task, tag_t object, int statuses_cou
 				if(levels[i] == 1) //We work only with one level where used
 				{
 					IFERR_THROW( awua_has_no_except_statuses(assemblies[i], statuses_count, statuses, &result) );
+					IFERR_THROW( attachments_contain_object(assemblies[i], attachments_count, attachments, &already_is_attachment) );
 					if(result)
 					{
 						WRITE_LOG("%s\n", "Adding to attachments");
@@ -263,7 +266,7 @@ int attach_where_used_assemblies(EPM_action_message_t msg)
 			if(attachments_types[i]==EPM_target_attachment)
 			{
 				WRITE_LOG("%s\n", "Working with target");
-				IFERR_THROW( find_assemblies_and_add_them(root_task, attachments[i], statuses_count, status_names_to_ignore_list) );
+				IFERR_THROW( find_assemblies_and_add_them(root_task, attachments[i], statuses_count, status_names_to_ignore_list, attachments_count, attachments) );
 			}
 		}
 

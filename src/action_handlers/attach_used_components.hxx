@@ -9,5 +9,6 @@ int auc_has_no_except_statuses(tag_t object, int statuses_count, char** statuses
 int find_components_and_add_them(tag_t root_task, tag_t object, int statuses_count, char** statuses);
 int auc_convert_status_names_string_to_list(char* status_names_string, int* statuses_count, char*** statuses);
 int attach_used_components(EPM_action_message_t msg);
+int attachments_contain_object(tag_t object, int attachments_count, tag_t* attachments, logical* result);
 
 #endif

@@ -119,7 +119,27 @@ int auc_has_no_except_statuses(tag_t object, int statuses_count, char** statuses
 	return ifail;
 }
 
-int find_components_and_add_them(tag_t root_task, tag_t object, int statuses_count, char** statuses)
+int attachments_contain_object(tag_t object, int attachments_count, tag_t* attachments, logical* result)
+{
+	int ifail = ITK_ok;
+
+	try
+	{
+		*result = false;
+		for(int i = 0; i < attachments_count; i++)
+		{
+			if(attachments[i] == object) *result = true;
+		}
+	}
+	catch(int exfail)
+	{
+		ifail = exfail;
+	}
+
+	return ifail;
+}
+
+int find_components_and_add_them(tag_t root_task, tag_t object, int statuses_count, char** statuses, int attachments_count, tag_t* attachments)
 {
 	int ifail = ITK_ok;
 	tag_t object_type;
@@ -147,6 +167,7 @@ int find_components_and_add_them(tag_t root_task, tag_t object, int statuses_cou
 				tag_t* child_lines = NULLTAG;
 				tag_t revision = NULLTAG;
 				logical result = false;
+				logical already_is_attachment = false;
 
 				IFERR_THROW( get_bom_window_and_top_line_from_bvr(bvrs[i], true, &bom_window, &top_line) );
 				IFERR_THROW( BOM_line_ask_all_child_lines(top_line, &child_lines_count, &child_lines) );
@@ -158,7 +179,8 @@ int find_components_and_add_them(tag_t root_task, tag_t object, int statuses_cou
 				{
 					IFERR_THROW( AOM_ask_value_tag(child_lines[j], "bl_revision", &revision) );
 					IFERR_THROW( auc_has_no_except_statuses(revision, statuses_count, statuses, &result) );
-					if(result)
+					IFERR_THROW( attachments_contain_object(revision, attachments_count, attachments, &already_is_attachment) );
+					if(result && !already_is_attachment)
 					{
 						WRITE_LOG("%s\n", "Adding to attachments");
 						try
@@ -278,7 +300,7 @@ int attach_used_components(EPM_action_message_t msg)
 			if(attachments_types[i]==EPM_target_attachment)
 			{
 				WRITE_LOG("%s\n", "Working with target");
-				IFERR_THROW( find_components_and_add_them(root_task, attachments[i], statuses_count, status_names_to_ignore_list) );
+				IFERR_THROW( find_components_and_add_them(root_task, attachments[i], statuses_count, status_names_to_ignore_list, attachments_count, attachments) );
 			}
 		}
 

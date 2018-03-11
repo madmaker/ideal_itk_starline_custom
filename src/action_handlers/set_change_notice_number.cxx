@@ -24,7 +24,7 @@ int find_new_value(char* attr_name, char** value)
 
 	try
 	{
-		IFERR_THROW( QRY_find("IdealPLM_FindCNForms", &query) );
+		IFERR_THROW( QRY_find("__IDEALPLM - FindCNForms", &query) );
 		IFNULLTAG_THROW( query );
 		IFERR_THROW( QRY_execute(query, 0, NULL, NULL, &found_objects_count, &found_objects) );
 		if (found_objects_count != 0)
@@ -86,25 +86,18 @@ int set_form_value_if_empty(tag_t form, char* attr_name)
 {
 	int ifail = ITK_ok;
 	char
-		*current_value = NULL,
 		*new_value = NULL;
 
 	try
 	{
-		IFERR_THROW( AOM_ask_value_string(form, attr_name, &current_value) );
-		if(STR_EMPTY(current_value))
-		{
-			WRITE_LOG("%s\n", "Empty ");
-			IFERR_THROW( find_new_value(attr_name, &new_value) );
-			IFERR_THROW( set_property(form, attr_name, new_value) );
-		}
+		IFERR_THROW( find_new_value(attr_name, &new_value) );
+		IFERR_THROW( set_property(form, attr_name, new_value) );
 	}
 	catch (int exfail)
 	{
 		ifail = exfail;
 	}
 
-	if(current_value!=NULL) MEM_free(current_value);
 	if(new_value!=NULL) MEM_free(new_value);
 
 	return ifail;
@@ -114,13 +107,13 @@ int set_change_notice_number(EPM_action_message_t msg)
 {
 	int ifail = ITK_ok;
 	tag_t
-		*attachments,
+		*attachments = NULL,
 		root_task,
 		target_form,
 		form_type,
 		temp_type;
 	int
-		*attachments_types,
+		*attachments_types = NULL,
 		attachments_count = 0;
 	bool
 		is_type_of = false;
@@ -141,6 +134,7 @@ int set_change_notice_number(EPM_action_message_t msg)
 		{
 			if(attachments_types[i]==EPM_target_attachment)
 			{
+				WRITE_LOG("%s\n", "Checking attachment type");
 				IFERR_THROW( TCTYPE_ask_object_type(attachments[i], &temp_type) );
 				IFERR_THROW( TCTYPE_is_type_of(temp_type, form_type, &is_type_of) );
 				if(is_type_of)
@@ -150,15 +144,13 @@ int set_change_notice_number(EPM_action_message_t msg)
 			}
 		}
 
-		MEM_free(attachments);
-		MEM_free(attachments_types);
-		if(form_type_name!=NULL) MEM_free(form_type_name);
-		if(attribute_name!=NULL) MEM_free(attribute_name);
 	}
 	catch (int exfail)
 	{
 		ifail = exfail;
 	}
+	if(attachments!=NULL) MEM_free(attachments); attachments = NULL;
+	if(attachments_types!=NULL) MEM_free(attachments_types); attachments_types = NULL;
 
 	return ifail;
 }

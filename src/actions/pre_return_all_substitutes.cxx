@@ -114,6 +114,8 @@ int pre_return_all_substitutes(METHOD_message_t *msg, va_list args)
 	tag_t relation_type;
 	int top_replacement_forms_count = 0;
 	tag_t* top_replacement_forms;
+	int child_bom_lines_count = 0;
+	tag_t* child_bom_lines = NULL;
 
 	try
 	{
@@ -128,8 +130,7 @@ int pre_return_all_substitutes(METHOD_message_t *msg, va_list args)
 		{
 			tag_t bom_window;
 			tag_t top_line;
-			int child_bom_lines_count = 0;
-			tag_t* child_bom_lines;
+
 			IFERR_THROW( get_bom_window_and_top_line_from_bvr(primary_object, false, &bom_window, &top_line) );
 			IFERR_THROW( BOM_line_ask_all_child_lines(top_line, &child_bom_lines_count, &child_bom_lines) );
 
@@ -149,7 +150,6 @@ int pre_return_all_substitutes(METHOD_message_t *msg, va_list args)
 			}
 			IFERR_THROW( BOM_save_window(bom_window) );
 			IFERR_THROW( BOM_close_window(bom_window) );
-			if(child_bom_lines_count > 0) MEM_free(child_bom_lines);
 		}
 
 		WRITE_LOG("%s\n", "-PRE done");
@@ -159,6 +159,7 @@ int pre_return_all_substitutes(METHOD_message_t *msg, va_list args)
 		ifail = exfail;
 	}
 
+	if(child_bom_lines != NULL) MEM_free(child_bom_lines); child_bom_lines = NULL;
 	if(top_replacement_forms_count > 0) MEM_free(top_replacement_forms);
 
 	return ifail;

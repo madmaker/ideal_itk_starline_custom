@@ -131,7 +131,7 @@ int list_bom_substitutes(tag_t bom_line, tag_t top_replacement_form)
 			IFERR_THROW( AOM_ask_value_tag(substitutes[i], "bl_revision", &revision) );
 			IFNULLTAG_THROW( revision );
 			IFERR_THROW( relate(replacement_form, revision) );
-			IFERR_THROW( BOM_line_cut(substitutes[i]) );
+			//IFERR_THROW( BOM_line_cut(substitutes[i]) );
 		}
 	}
 	catch (int exfail)
@@ -182,7 +182,12 @@ int post_remove_all_substitutes(METHOD_message_t *msg, va_list args)
 	tag_t primary_object = NULLTAG;
 	tag_t secondary_object = NULLTAG;
 	logical primary_is_bvr = false;
-	tag_t* occurences;
+	tag_t* occurences = NULL;
+	int child_count = 0;
+	tag_t* children = NULL;
+	int substitutes_count = 0;
+	int substitutes_counter = 0;
+	tag_t* substitutes = NULL;
 
 	try
 	{
@@ -200,18 +205,41 @@ int post_remove_all_substitutes(METHOD_message_t *msg, va_list args)
 
 			tag_t bom_window;
 			tag_t top_line;
-			int child_count = 0;
-			tag_t* children;
 			IFERR_THROW( get_bom_window_and_top_line_from_bvr(primary_object, false, &bom_window, &top_line) );
+			IFNULLTAG_THROW( top_line );
 			IFERR_THROW( BOM_line_ask_all_child_lines(top_line, &child_count, &children) );
+
+			logical is_substitute = false;
 			for(int i = 0; i < child_count; i++)
 			{
-				WRITE_LOG("%s\n", "-line");
-				logical is_substitute;
 				IFERR_THROW( BOM_line_ask_is_substitute(children[i], &is_substitute) );
-				if(!is_substitute) list_bom_substitutes(children[i], top_replacement_form);
-				WRITE_LOG("%s\n", "-line done");
+				if(is_substitute) substitutes_count++;
 			}
+
+			if(substitutes_count>0)
+			{
+				substitutes = (tag_t*) MEM_alloc(sizeof(tag_t) * substitutes_count);
+				for(int j = 0; j < child_count; j++)
+				{
+					WRITE_LOG("%s\n", "-line");
+					IFERR_THROW( BOM_line_ask_is_substitute(children[j], &is_substitute) );
+					if(is_substitute)
+					{
+						substitutes[substitutes_counter++] = children[j];
+					}
+					else
+					{
+						list_bom_substitutes(children[j], top_replacement_form);
+					}
+					WRITE_LOG("%s\n", "-line done");
+				}
+			}
+
+			for(int k = 0; k < substitutes_count; k++)
+			{
+				IFERR_THROW( BOM_line_cut(substitutes[k]) );
+			}
+
 			IFERR_THROW( BOM_save_window(bom_window) );
 			IFERR_THROW( BOM_close_window(bom_window) );
 		}
@@ -225,6 +253,8 @@ int post_remove_all_substitutes(METHOD_message_t *msg, va_list args)
 		ifail = exfail;
 	}
 
+	if(substitutes!=NULL) MEM_free(substitutes); substitutes = NULL;
+	if(children!=NULL) MEM_free(children); children = NULL;
 	if(occ_number > 0) MEM_free(occurences);
 
 	return ifail;

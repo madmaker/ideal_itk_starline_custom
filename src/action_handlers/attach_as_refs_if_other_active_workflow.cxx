@@ -34,19 +34,20 @@ int is_in_another_active_workflow(tag_t object, tag_t root_task, logical* result
 	return ifail;
 }
 
-EPM_decision_t no_other_active_workflows(EPM_rule_message_t msg)
+int attach_as_refs_if_other_active_workflow(EPM_action_message_t msg)
 {
 	int ifail = ITK_ok;
 	tag_t
 		current_task = NULLTAG,
 		root_task = NULLTAG,
-		*attachments;
+		*attachments = NULL,
+		*attachments_to_change = NULL;
 	int
 		*attachments_types,
-		attachments_count = 0;
+		attachments_count = 0,
+		attachments_to_change_count = 0,
+		*attachments_types_to_change;
 	logical in_another_wf = false;
-
-	EPM_decision_t decision = EPM_go;
 
 	try
 	{
@@ -55,6 +56,10 @@ EPM_decision_t no_other_active_workflows(EPM_rule_message_t msg)
 
 		IFERR_THROW( EPM_ask_root_task(current_task, &root_task) );
 		IFERR_THROW( EPM_ask_all_attachments(root_task, &attachments_count, &attachments, &attachments_types) );
+
+		attachments_types_to_change = (int*) MEM_alloc(sizeof(int) * attachments_count);
+		attachments_to_change = (tag_t*) MEM_alloc(sizeof(tag_t) * attachments_count);
+
 		for(int i = 0; i < attachments_count; i++)
 		{
 			if(attachments_types[i]==EPM_target_attachment)
@@ -64,12 +69,16 @@ EPM_decision_t no_other_active_workflows(EPM_rule_message_t msg)
 				if(in_another_wf)
 				{
 					WRITE_LOG("%s\n", "IN ANOTHER WF");
-					IFERR_THROW( EMH_store_error_s2(EMH_severity_error, EPM_worfklow_launched_in_background, "EMH_severity_error", "EPM_nogo") );
-					decision = EPM_nogo;
+					attachments_to_change[attachments_to_change_count] = attachments[i];
+					attachments_types_to_change[attachments_to_change_count] = EPM_reference_attachment;
+					attachments_to_change_count++;
 					break;
 				}
 			}
 		}
+
+		IFERR_THROW( EPM_remove_attachments(root_task, attachments_to_change_count, attachments_to_change) );
+		IFERR_THROW( EPM_add_attachments(root_task, attachments_to_change_count, attachments_to_change, attachments_types_to_change) );
 	}
 	catch (int exfail)
 	{
@@ -83,5 +92,8 @@ EPM_decision_t no_other_active_workflows(EPM_rule_message_t msg)
 		MEM_free(attachments_types);
 	}
 
-	return decision;
+	if(attachments_to_change!=NULL) MEM_free(attachments_to_change);
+	if(attachments_types_to_change!=NULL) MEM_free(attachments_types_to_change);
+
+	return ifail;
 }

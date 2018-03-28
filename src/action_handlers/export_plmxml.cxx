@@ -138,6 +138,7 @@ int export_plmxml(EPM_action_message_t msg)
 	 	*form_uid = NULL,
 	 	*revision_uid = NULL,
 	 	util[] = "%TC_BIN%\\plmxml_export",
+	 	//util[] = "plmxml_export", //FOR SOLARIS
 	    login[] = "-u=infodba -p=infodba -g=dba",
 	    cmd[256] = " ",
 		*transfer_mode = NULL,
@@ -219,6 +220,7 @@ int export_plmxml(EPM_action_message_t msg)
 						sprintf(cmd, "%s %s -xml_file=\"%s/%s-%s%s.xml\" -transfermode=\"%s\" -rev_rule=\"%s\" -uid=", util, login, export_dir, form_uid, task_uid, site_uid, transfer_mode, rev_rule);
 						strcat(cmd, revision_uid);
 						//printf("Result command: \n%s", cmd);
+						WRITE_LOG("%s\n", cmd);
 						WRITE_LOG("%s\n", "Executing");
 						system(cmd);
 						break;

@@ -17,6 +17,8 @@
 #include "no_reference_attachments.hxx"
 #include "attach_as_refs_if_other_active_workflow.hxx"
 #include "remove_relations_of_targets.hxx"
+#include "set_occurrence_placement_from_file.hxx"
+#include "attach_as_refs_related_wo.hxx"
 
 int starline_custom_idealplm_register_action_handlers(int * decision, va_list args)
 {
@@ -41,6 +43,9 @@ int starline_custom_idealplm_register_action_handlers(int * decision, va_list ar
 		IFERR_THROW( EPM_register_action_handler("IDEALPLM_SetChangeNoticeNumber", "", set_change_notice_number) );
 		IFERR_THROW( EPM_register_action_handler("IDEALPLM_RemoveRelationsOfTargets", "", remove_relations_of_targets) );
 		IFERR_THROW( EPM_register_rule_handler("IDEALPLM_NO_REFERENCE_ATTACHMENTS", "Success if there are no reference attachments", no_reference_attachments) );
+
+		IFERR_THROW( EPM_register_action_handler("IDEALPLM_SetOccurrencePlacementFromFile", "", set_occurrence_placement_from_file) );
+		IFERR_THROW( EPM_register_action_handler("IDEALPLM_AttachAsRefsRelatedWO", "", attach_as_refs_related_wo) );
 
 		WRITE_LOG("%s\n", "done");
 	}

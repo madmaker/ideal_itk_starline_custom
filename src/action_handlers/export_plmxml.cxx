@@ -137,8 +137,8 @@ int export_plmxml(EPM_action_message_t msg)
 	 	*task_uid = NULL,
 	 	*form_uid = NULL,
 	 	*revision_uid = NULL,
-	 	util[] = "%TC_BIN%\\plmxml_export", // FOR WINDOWS
-	 	//util[] = "plmxml_export", //FOR SOLARIS
+	 	//util[] = "%TC_BIN%\\plmxml_export", // FOR WINDOWS
+	 	util[] = "plmxml_export", //FOR SOLARIS
 	    login[] = "-u=infodba -p=infodba -g=dba",
 	    cmd[256] = " ",
 		*transfer_mode = NULL,

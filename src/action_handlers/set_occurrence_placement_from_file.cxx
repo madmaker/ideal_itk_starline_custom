@@ -19,9 +19,7 @@ using namespace std;
 int get_designator_and_placement_indexes(char* line, int* designator, int* placement)
 {
 	WRITE_LOG("%s\n", ".get_designator_and_placement_indexes");
-	WRITE_LOG("%s\n", line);
 	string value ( line );
-	WRITE_LOG("c_str:%s\n", value.c_str());
 	WRITE_LOG(".first=[%d] second=[%d]\n", strlen(line), value.length());
 
 	printf("%s\n", "---===--- new");
@@ -38,17 +36,8 @@ int get_designator_and_placement_indexes(char* line, int* designator, int* place
 	delim[1] = 0;
 
 	size_t old_pos = 0;
-	//size_t curr_pos = value.find(",");
 	size_t curr_pos = value.find(delim);
 	WRITE_LOG(".first_pos=%d\n", curr_pos);
-
-	printf("%s\n", "---===--- old");
-	for(int j = 0; j < strlen(line); j++)
-	{
-		printf("[%d]\n", line[j]);
-	}
-	printf("\n");
-	printf("%s\n", "---===---");
 
 	while(curr_pos!=string::npos)
 	{
@@ -84,14 +73,12 @@ vector<string> split_eda_string(char* line)
 	delim[3] = 0;
 
 	size_t old_pos = 1;
-	//size_t curr_pos = value.find("\",\"");
 	size_t curr_pos = value.find(delim);
 
 	while(curr_pos!=string::npos)
 	{
 		splited.push_back(value.substr(old_pos , curr_pos - old_pos));
 		old_pos = curr_pos + 3;
-		//curr_pos = value.find("\",\"", curr_pos + 3 );
 		curr_pos = value.find(delim, curr_pos + 3 );
 	}
 
@@ -152,13 +139,13 @@ int find_and_set_placement(tag_t bom_line, vector<string> designators, vector<st
 
 	try
 	{
-		IFERR_THROW( AOM_ask_value_string(bom_line, "Oc9_AdjustFactor", &occ_designator) );
+		IFERR_THROW( AOM_ask_value_string(bom_line, "bl_occ_ref_designator", &occ_designator) );
 		//IFERR_THROW( AOM_ask_value_string(bom_line, "bl_occ_ref_designator", &occ_designator) );
 		WRITE_LOG("od:%s\n", occ_designator);
 		placement_index = find_placement(designators, placements, occ_designator);
 		if(placement_index!=-1)
 		{
-			IFERR_THROW( AOM_set_value_string(bom_line, "Oc9_Note", placements[placement_index].c_str()) );
+			IFERR_THROW( AOM_set_value_string(bom_line, "SL4_SidePCB", placements[placement_index].c_str()) );
 		}
 	}
 	catch (int exfail)
@@ -236,7 +223,7 @@ int find_and_read_placements_dataset(tag_t top_bl, vector<string>* designators, 
 		strcat(target_dataset_name, "_PAP");
 		WRITE_LOG("target_dataset_name:%s\n", target_dataset_name);
 
-		IFERR_THROW( GRM_find_relation_type("IMAN_Motion", &relation_type) );
+		IFERR_THROW( GRM_find_relation_type("EDAHasDerivedDataset", &relation_type) );
 		IFNULLTAG_THROW( relation_type );
 		IFERR_THROW( GRM_list_secondary_objects_only(top_revision, relation_type, &related_objects_count, &related_objects) );
 		for (int i = 0; i < related_objects_count; i++)
@@ -274,8 +261,7 @@ int read_placements_dataset(tag_t dataset, vector<string>* designators, vector<s
 	        file_descriptor = NULL;
 	AE_reference_type_t
 	        ref_type;
-	char
-		text_line[SS_MAXLLEN+1];
+	char* text_line = NULL;
 	int designator_pos = -1;
 	int placement_pos = -1;
 	char* designator = NULL;
@@ -284,26 +270,29 @@ int read_placements_dataset(tag_t dataset, vector<string>* designators, vector<s
 	try
 	{
 		WRITE_LOG("%s\n", ".read_placements_dataset");
-		//if (dataset == NULLTAG) continue;
+		if (dataset == NULLTAG) return ITK_ok;
 		//IFERR_THROW( AOM_refresh(dataset, TRUE) );
 
 		IFERR_THROW( AE_ask_dataset_named_ref(dataset, "Text", &ref_type, &text_file) );
-		//if (text_file == NULLTAG) continue;
+		if (text_file == NULLTAG) return ITK_ok;
 		//IFERR_THROW( AOM_refresh(text_file, TRUE) );
 
 		IFERR_THROW( IMF_ask_file_descriptor(text_file, &file_descriptor) );
 		IFERR_THROW( IMF_open_file(file_descriptor, SS_RDONLY) );
 
 		WRITE_LOG("%s\n", ".first line");
-		IMF_read_file_line(file_descriptor, text_line);
+		IMF_read_file_line2(file_descriptor, &text_line);
+
 		WRITE_LOG("%s\n", ".getting indexes");
 		get_designator_and_placement_indexes(text_line, &designator_pos, &placement_pos);
 		WRITE_LOG("%s\n", ".done");
+		MEM_free(text_line); text_line = NULL;
 
 		//if(designator_pos==-1 || placement_pos==-1) throw
 
 		WRITE_LOG("%s\n", ".loop");
-		while (IMF_read_file_line(file_descriptor, text_line) == ITK_ok)
+
+		while (IMF_read_file_line2(file_descriptor, &text_line) == ITK_ok)
 		{
 			if(strlen(text_line)>3)
 			{
@@ -315,7 +304,10 @@ int read_placements_dataset(tag_t dataset, vector<string>* designators, vector<s
 				if(designator) free(designator);
 				if(placement) free(placement);
 			}
+			if(text_line!=NULL) MEM_free(text_line); text_line = NULL;
 		}
+		EMH_clear_errors();
+
 		WRITE_LOG("%s\n", ".loop done");
 
 		IFERR_THROW( IMF_close_file(file_descriptor) );
@@ -328,6 +320,8 @@ int read_placements_dataset(tag_t dataset, vector<string>* designators, vector<s
 	{
 		ifail = exfail;
 	}
+
+	if(text_line!=NULL) MEM_free(text_line); text_line = NULL;
 
 	return ifail;
 }

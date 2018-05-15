@@ -95,6 +95,7 @@ int get_bom_window_and_top_line_from_bvr(tag_t bvr, logical packed, tag_t* bom_w
 	try
 	{
 		IFERR_THROW( BOM_create_window(&bom_window_r) );
+		IFERR_THROW( BOM_set_window_pack_all(bom_window_r, packed) );
 		IFERR_THROW( BOM_set_window_top_line_bvr(bom_window_r, bvr, &top_line_r) );
 		*bom_window = bom_window_r;
 		*top_line = top_line_r;

@@ -6,6 +6,7 @@
 #include <tccore/aom.h>
 #include <tccore/tctype.h>
 #include <stdlib.h>
+#include <string.h>
 #include "../misc.hxx"
 #include "export_plmxml.hxx"
 
@@ -130,6 +131,26 @@ int get_related_sap_form(tag_t primary_object, tag_t relation, tag_t* sap_form)
 	return ifail;
 }
 
+void rename_file(char* oldname)
+{
+	int result;
+	char* lastslash;
+
+	lastslash = strrchr(oldname, '/');
+
+	char* newname = (char*) malloc(strlen(oldname) * sizeof(char));
+	strncpy(newname, oldname, lastslash - oldname + 1);
+
+	lastslash++;
+	lastslash++;
+	strcat(newname, lastslash);
+
+	result = rename( oldname , newname );
+	free(newname);
+	if ( result != 0 )
+		WRITE_LOG("%s\n", "Error renaming file");
+}
+
 int export_plmxml(EPM_action_message_t msg)
 {
 	int ifail = ITK_ok;
@@ -139,8 +160,8 @@ int export_plmxml(EPM_action_message_t msg)
 	 	*revision_uid = NULL,
 	 	//util[] = "%TC_BIN%\\plmxml_export", // FOR WINDOWS
 	 	util[] = "plmxml_export", //FOR SOLARIS
-	    login[] = "-u=infodba -p=infodba -g=dba",
-	    cmd[256] = " ",
+	    login[] = "-u=infodba -p=StarlineParts -g=dba",
+	    cmd[1024] = " ",
 		*transfer_mode = NULL,
 		*export_dir = NULL,
 		*rev_rule = NULL,
@@ -216,13 +237,14 @@ int export_plmxml(EPM_action_message_t msg)
 							strcpy(site_uid, "AAAAAAAAAAAAAA");
 						}
 						WRITE_LOG("%s\n", "Forming cmd line");
-						//sprintf(cmd, "%s %s -xml_file=C:/Temp/%s-%s.xml -uid=", util, login, form_uid, task_uid);
-						sprintf(cmd, "%s %s -xml_file=\"%s/%s-%s%s.xml\" -transfermode=\"%s\" -rev_rule=\"%s\" -uid=", util, login, export_dir, form_uid, task_uid, site_uid, transfer_mode, rev_rule);
+						char filepath[256] = "";
+						sprintf(filepath, "%s/.%s-%s%s.xml", export_dir, form_uid, task_uid, site_uid);
+						sprintf(cmd, "%s %s -xml_file=\"%s\" -transfermode=\"%s\" -rev_rule=\"%s\" -uid=", util, login, filepath, transfer_mode, rev_rule);
 						strcat(cmd, revision_uid);
-						//printf("Result command: \n%s", cmd);
 						WRITE_LOG("%s\n", cmd);
 						WRITE_LOG("%s\n", "Executing");
 						system(cmd);
+						rename_file(filepath);
 						break;
 					}
 				}

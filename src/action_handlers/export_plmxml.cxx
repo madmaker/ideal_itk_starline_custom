@@ -203,16 +203,13 @@ int get_key_object_data(tag_t object, char* key, char** key_values_result)
 
 		if(curr_pos == std::string::npos && strlen(key) > 0)
 		{
-			printf("only one\n");
 		    splited.push_back ( key );
 		}
 		else if(curr_pos != std::string::npos)
 		{
-			printf("many\n");
 		    while (curr_pos != std::string::npos)
 		    {
 		    	splited.push_back (value.substr (old_pos, curr_pos - old_pos));
-		    	printf("adding [%s]\n", value.substr (old_pos, curr_pos - old_pos).c_str());
 		    	old_pos = curr_pos + 1;
 		    	curr_pos = value.find (delim, curr_pos + 1);
 		    }
@@ -224,7 +221,6 @@ int get_key_object_data(tag_t object, char* key, char** key_values_result)
 		{
 			if (i < splited.size () - 1)
 			{
-				printf("still going\n");
 				IFERR_THROW( AOM_ask_value_string(object, splited[i].c_str(), &temp_value) );
 				key_values = (char *) realloc (key_values, sizeof (char) * (strlen (key_values) + strlen(splited[i].c_str()) + strlen(temp_value) + 2)); // 2 because we add , and =
 			    strcat (key_values, splited[i].c_str ());
@@ -235,7 +231,6 @@ int get_key_object_data(tag_t object, char* key, char** key_values_result)
 			}
 		    else
 			{
-		    	printf("last one\n");
 		    	IFERR_THROW( AOM_ask_value_string(object, splited[i].c_str(), &temp_value) );
 		    	key_values = (char *) realloc (key_values, sizeof (char) * (strlen (key_values) + strlen (splited[i].c_str()) + strlen(temp_value) + 1)); // 1 because we add =
 		    	strcat (key_values, splited[i].c_str ());
@@ -247,8 +242,6 @@ int get_key_object_data(tag_t object, char* key, char** key_values_result)
 
 		*key_values_result = (char*) MEM_alloc(sizeof(char) * (strlen(key_values) + 1));
 		strcpy(*key_values_result, key_values);
-
-		printf ("[%s]\n", key_values);
 	}
 	catch (int exfail)
 	{
@@ -283,7 +276,7 @@ int export_plmxml(EPM_action_message_t msg)
 	char
 	 	*task_uid = NULL,
 	 	*obj_uid = NULL,
-	 	*obj_export_uid,
+	 	*obj_export_uid = NULL,
 	 	//util[] = "%TC_BIN%\\plmxml_export", // FOR WINDOWS
 	 	util[] = "plmxml_export", //FOR SOLARIS
 	    login[] = "-u=infodba -p=StarlineParts -g=dba",
@@ -454,23 +447,40 @@ int export_plmxml(EPM_action_message_t msg)
 		ifail = exfail;
 	}
 
-	if (transfer_mode) MEM_free(transfer_mode);
-	if (export_dir) MEM_free(export_dir);
-	if (rev_rule) MEM_free(rev_rule);
-	if (type_obj_uid_file_name) MEM_free(type_obj_uid_file_name);
-	if (type_obj_export) MEM_free(type_obj_export);
-	if (export_bom) MEM_free(export_bom);
-	if (type_obj_key) MEM_free(type_obj_key);
-	if (key_values) MEM_free(key_values);
-	if (key) MEM_free(key);
-	if (rev) MEM_free(rev);
+	WRITE_LOG("%s\n", "1");
+	if (transfer_mode!=NULL) MEM_free(transfer_mode); transfer_mode = NULL;
+	WRITE_LOG("%s\n", "2");
+	if (export_dir!=NULL) MEM_free(export_dir); export_dir = NULL;
+	WRITE_LOG("%s\n", "3");
+	if (rev_rule!=NULL) MEM_free(rev_rule); rev_rule = NULL;
+	WRITE_LOG("%s\n", "4");
+	if (type_obj_uid_file_name!=NULL) MEM_free(type_obj_uid_file_name); type_obj_uid_file_name = NULL;
+	WRITE_LOG("%s\n", "5");
+	if (type_obj_export!=NULL) MEM_free(type_obj_export); type_obj_export = NULL;
+	WRITE_LOG("%s\n", "6");
+	if (export_bom!=NULL) MEM_free(export_bom); export_bom = NULL;
+	WRITE_LOG("%s\n", "7");
+	if (type_obj_key!=NULL) MEM_free(type_obj_key); type_obj_key = NULL;
+	WRITE_LOG("%s\n", "8");
+	if (key_values!=NULL) MEM_free(key_values); key_values = NULL;
+	WRITE_LOG("%s\n", "9");
+	if (key!=NULL) MEM_free(key); key = NULL;
+	WRITE_LOG("%s\n", "10");
+	if (rev!=NULL) MEM_free(rev); rev = NULL;
 
-	if (obj_uid) MEM_free(obj_uid);
-	if (obj_export_uid) MEM_free(obj_export_uid);
-	if (task_uid) MEM_free(task_uid);
-	if (site_uid) MEM_free(site_uid);
+	WRITE_LOG("%s\n", "11");
+	if (obj_uid!=NULL) MEM_free(obj_uid); obj_uid = NULL;
+	WRITE_LOG("%s\n", "12");
+	if (obj_export_uid!=NULL) MEM_free(obj_export_uid); obj_export_uid = NULL;
+	WRITE_LOG("%s\n", "13");
+	if (task_uid!=NULL) MEM_free(task_uid); task_uid = NULL;
+	WRITE_LOG("%s\n", "14");
+	if (site_uid!=NULL) MEM_free(site_uid); site_uid = NULL;
+	WRITE_LOG("%s\n", "15");
 	if (attachments!=NULL) MEM_free(attachments); attachments = NULL;
+	WRITE_LOG("%s\n", "16");
 	if (attachments_types!=NULL) MEM_free(attachments_types); attachments_types = NULL;
+	WRITE_LOG("%s\n", "17");
 
 	return ifail;
 }

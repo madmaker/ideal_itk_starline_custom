@@ -413,9 +413,9 @@ int export_plmxml(EPM_action_message_t msg)
 
 			char filepath[256] = "";
 			sprintf(filepath, "%s/.%s-%s%s.xml", export_dir, obj_uid, task_uid, site_uid);
-			strcat(cmd, " -xml_file=\"");
+			strcat(cmd, " -xml_file='");
 			strcat(cmd, filepath);
-			strcat(cmd, "\"");
+			strcat(cmd, "'");
 
 			if(do_export_bom)
 			{
@@ -428,7 +428,9 @@ int export_plmxml(EPM_action_message_t msg)
 			else
 			{
 				strcat(cmd, " -uid=");
+				strcat(cmd, "'");
 				strcat(cmd, obj_export_uid);
+				strcat(cmd, "'");
 			}
 
 			WRITE_LOG("%s\n", cmd);

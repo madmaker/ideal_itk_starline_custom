@@ -73,8 +73,12 @@ int relate(tag_t primary, tag_t secondary)
 		WRITE_LOG("%s", "creating relation... ");
 		IFERR_THROW( GRM_find_relation_type("SL4_ReplacementRel", &relation_type) );
 		IFNULLTAG_THROW( relation_type );
-		IFERR_THROW( GRM_create_relation(primary, secondary, relation_type, NULLTAG, &relation) );
-		IFERR_THROW( GRM_save_relation(relation) );
+		IFERR_THROW( GRM_find_relation(primary, secondary, relation_type, &relation) );
+		if(relation == NULLTAG) //if no relation yet, we create it
+		{
+			IFERR_THROW( GRM_create_relation(primary, secondary, relation_type, NULLTAG, &relation) );
+			IFERR_THROW( GRM_save_relation(relation) );
+		}
 		WRITE_LOG("%s\n", "done");
 	}
 	catch (int exfail)
@@ -108,7 +112,22 @@ int get_bom_window_and_top_line_from_bvr(tag_t bvr, logical packed, tag_t* bom_w
 	return ifail;
 }
 
-int list_bom_substitutes(tag_t bom_line, tag_t top_replacement_form)
+int index_of_existing_base_line(tag_t revision, tag_t* base_lines, int size)
+{
+	int result = -1;
+
+	for(int i = 0; i < size; i++)
+	{
+		if(revision == base_lines[i])
+		{
+			result = i;
+		}
+	}
+
+	return result;
+}
+
+int list_bom_substitutes(tag_t bom_line, tag_t top_replacement_form, tag_t* replacement_forms, tag_t* base_lines, int* base_line_counter)
 {
 	int ifail = ITK_ok;
 	int sub_number = 0;
@@ -121,11 +140,24 @@ int list_bom_substitutes(tag_t bom_line, tag_t top_replacement_form)
 		IFERR_THROW( BOM_line_list_substitutes(bom_line, &sub_number, &substitutes) );
 		if(sub_number>0)
 		{
-			IFERR_THROW( create_form(&replacement_form) );
-			IFERR_THROW( relate(top_replacement_form, replacement_form) );
 			IFERR_THROW( AOM_ask_value_tag(bom_line, "bl_revision", &revision) );
 			IFNULLTAG_THROW( revision );
-			IFERR_THROW( set_substitute_base_data(replacement_form, revision) );
+			int pos = index_of_existing_base_line(revision, base_lines, *base_line_counter);
+			if(pos == -1) // not found
+			{
+				printf("%s\n", "Existing revision not found");
+				base_lines[*base_line_counter] = revision;
+				IFERR_THROW( create_form(&replacement_form) );
+				IFERR_THROW( relate(top_replacement_form, replacement_form) );
+				IFERR_THROW( set_substitute_base_data(replacement_form, revision) );
+				replacement_forms[*base_line_counter] = replacement_form;
+				*base_line_counter = *base_line_counter + 1;
+			}
+			else
+			{
+				printf("%s [%d]\n", "Found existing revision at position", pos);
+				replacement_form = replacement_forms[pos];
+			}
 		}
 		for(int i = 0; i < sub_number; i++)
 		{
@@ -176,6 +208,14 @@ int check_related_object_types(tag_t primary_object, tag_t secondary_object, log
 	return ifail;
 }
 
+void init_array_of_nulltags(tag_t* array, int size)
+{
+	for(int i = 0; i < size; i++)
+	{
+		array[i] = NULLTAG;
+	}
+}
+
 int post_remove_all_substitutes(METHOD_message_t *msg, va_list args)
 {
 	int ifail = ITK_ok;
@@ -188,7 +228,10 @@ int post_remove_all_substitutes(METHOD_message_t *msg, va_list args)
 	tag_t* children = NULL;
 	int substitutes_count = 0;
 	int substitutes_counter = 0;
+	int base_lines_counter = 0;
 	tag_t* substitutes = NULL;
+	tag_t* base_lines = NULL;
+	tag_t* replacement_forms = NULL;
 
 	try
 	{
@@ -220,6 +263,10 @@ int post_remove_all_substitutes(METHOD_message_t *msg, va_list args)
 			if(substitutes_count>0)
 			{
 				substitutes = (tag_t*) MEM_alloc(sizeof(tag_t) * substitutes_count);
+				base_lines = (tag_t*) MEM_alloc(sizeof(tag_t) * substitutes_count);
+				replacement_forms = (tag_t*) MEM_alloc(sizeof(tag_t) * substitutes_count);
+				init_array_of_nulltags(base_lines, substitutes_count);
+				init_array_of_nulltags(replacement_forms, substitutes_count);
 				for(int j = 0; j < child_count; j++)
 				{
 					WRITE_LOG("%s\n", "-line");
@@ -230,7 +277,7 @@ int post_remove_all_substitutes(METHOD_message_t *msg, va_list args)
 					}
 					else
 					{
-						list_bom_substitutes(children[j], top_replacement_form);
+						list_bom_substitutes(children[j], top_replacement_form, replacement_forms, base_lines, &base_lines_counter);
 					}
 					WRITE_LOG("%s\n", "-line done");
 				}
@@ -255,6 +302,8 @@ int post_remove_all_substitutes(METHOD_message_t *msg, va_list args)
 	}
 
 	if(substitutes!=NULL) MEM_free(substitutes); substitutes = NULL;
+	if(base_lines!=NULL) MEM_free(base_lines); base_lines = NULL;
+	if(replacement_forms!=NULL) MEM_free(replacement_forms); replacement_forms = NULL;
 	if(children!=NULL) MEM_free(children); children = NULL;
 	if(occ_number > 0) MEM_free(occurences);
 

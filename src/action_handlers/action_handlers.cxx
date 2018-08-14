@@ -22,6 +22,7 @@
 #include "check_if_directory_exists.hxx"
 #include "check_group_and_role_rh.hxx"
 #include "check_user_and_group_rh.hxx"
+#include "copy_target_form_props_to_ref_form.hxx"
 
 int starline_custom_idealplm_register_action_handlers(int * decision, va_list args)
 {
@@ -53,6 +54,8 @@ int starline_custom_idealplm_register_action_handlers(int * decision, va_list ar
 
 		IFERR_THROW( EPM_register_action_handler("IDEALPLM_SetOccurrencePlacementFromFile", "", set_occurrence_placement_from_file) );
 		IFERR_THROW( EPM_register_action_handler("IDEALPLM_AttachAsRefsRelatedWO", "", attach_as_refs_related_wo) );
+
+		IFERR_THROW( EPM_register_action_handler("IDEALPLM_CopyTargetFormPropsToRefForm", "", copy_target_form_props_to_ref_form) );
 
 		WRITE_LOG("%s\n", "done");
 	}

@@ -74,7 +74,10 @@ int copy_target_form_props_to_ref_form(EPM_action_message_t msg)
 			IFERR_THROW( AOM_ask_value_tag(target_form, "sl4_ReplacementPrimary", &primary_rel_part) );
 			if(primary_rel_part!=NULLTAG)
 			{
+				IFERR_THROW( AOM_refresh(ref_form, TRUE) );
 				IFERR_THROW( AOM_set_value_tag(ref_form, "sl4_ReplacementPrimary", primary_rel_part) );
+				IFERR_THROW( AOM_save(ref_form) );
+				IFERR_THROW( AOM_refresh(ref_form, FALSE) );
 			}
 
 			IFERR_THROW( GRM_list_secondary_objects_only(target_form, relation_type, &related_objects_count, &related_objects) );
